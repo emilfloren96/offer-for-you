@@ -1,6 +1,6 @@
 import { Canvas, useLoader } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useMemo } from "react";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { useThree } from "@react-three/fiber";
@@ -64,12 +64,13 @@ function Model({
   shape,
 }: ModelProps) {
   const gltf = useLoader(GLTFLoader, `${import.meta.env.BASE_URL}models/${shape}-model.glb`);
+  const scene = useMemo(() => gltf.scene.clone(true), [gltf]);
   const originalMaterials = useRef<
     Map<THREE.Mesh, THREE.Material | THREE.Material[]>
   >(new Map());
 
   useEffect(() => {
-    gltf.scene.traverse((child) => {
+    scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         originalMaterials.current.set(child, child.material);
         console.log(
@@ -80,10 +81,10 @@ function Model({
         );
       }
     });
-  }, [gltf]);
+  }, [scene]);
 
   useEffect(() => {
-    gltf.scene.traverse((child) => {
+    scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         const category = getCategory(child.name);
         const original = originalMaterials.current.get(child);
@@ -106,7 +107,7 @@ function Model({
         }
       }
     });
-  }, [selectedPart, hoveredPart, gltf]);
+  }, [selectedPart, hoveredPart, scene]);
 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
@@ -137,7 +138,7 @@ function Model({
 
   return (
     <primitive
-      object={gltf.scene}
+      object={scene}
       scale={0.1}
       onClick={handleClick}
       onPointerOver={handlePointerOver}
