@@ -63,7 +63,7 @@ function Model({
   onHoverPart,
   shape,
 }: ModelProps) {
-  const gltf = useLoader(GLTFLoader, `/models/${shape}-model.glb`);
+  const gltf = useLoader(GLTFLoader, `${import.meta.env.BASE_URL}models/${shape}-model.glb`);
   const originalMaterials = useRef<
     Map<THREE.Mesh, THREE.Material | THREE.Material[]>
   >(new Map());
