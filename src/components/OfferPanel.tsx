@@ -49,15 +49,18 @@ export function OfferPanel({ partId, onClose }: OfferPanelProps) {
 
   if (submitted) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-        <div className="text-4xl mb-4">✅</div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Tack för din förfrågan!</h3>
-        <p className="text-gray-600 mb-4">
+      <div className="bg-white shadow-lg p-8 text-center" style={{ borderRadius: 'var(--border-radius)' }}>
+        <div className="text-4xl mb-4">&#10003;</div>
+        <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--primary-blue)' }}>
+          Tack för din förfrågan!
+        </h3>
+        <p className="mb-6" style={{ opacity: 0.7 }}>
           Vi har tagit emot din offertförfrågan för <strong>{info.title}</strong> och återkommer inom kort.
         </p>
         <button
           onClick={onClose}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="px-6 py-2 text-white font-semibold transition hover:opacity-90"
+          style={{ backgroundColor: 'var(--primary-blue)', borderRadius: 'var(--border-radius)' }}
         >
           Stäng
         </button>
@@ -66,17 +69,18 @@ export function OfferPanel({ partId, onClose }: OfferPanelProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-gray-900">{info.title}</h3>
+    <div className="bg-white shadow-lg p-8" style={{ borderRadius: 'var(--border-radius)' }}>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-xl font-bold" style={{ color: 'var(--primary-blue)' }}>{info.title}</h3>
         <button
           onClick={onClose}
           className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
         >
-          ×
+          &times;
         </button>
       </div>
-      <p className="text-gray-600 mb-6">{info.description}</p>
+      <div className="w-12 h-[3px] mb-4" style={{ backgroundColor: 'var(--accent-red)' }} />
+      <p className="mb-6" style={{ opacity: 0.7 }}>{info.description}</p>
 
       <form
         onSubmit={(e) => {
@@ -86,50 +90,55 @@ export function OfferPanel({ partId, onClose }: OfferPanelProps) {
         className="space-y-4"
       >
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Namn</label>
+          <label className="block text-sm font-semibold mb-1">Namn</label>
           <input
             type="text"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2"
+            style={{ borderRadius: 'var(--border-radius)', '--tw-ring-color': 'var(--primary-blue)' } as React.CSSProperties}
             placeholder="Ditt namn"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">E-post</label>
+          <label className="block text-sm font-semibold mb-1">E-post</label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2"
+            style={{ borderRadius: 'var(--border-radius)', '--tw-ring-color': 'var(--primary-blue)' } as React.CSSProperties}
             placeholder="din@email.se"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+          <label className="block text-sm font-semibold mb-1">Telefon</label>
           <input
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2"
+            style={{ borderRadius: 'var(--border-radius)', '--tw-ring-color': 'var(--primary-blue)' } as React.CSSProperties}
             placeholder="070-123 45 67"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Meddelande</label>
+          <label className="block text-sm font-semibold mb-1">Meddelande</label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2"
+            style={{ borderRadius: 'var(--border-radius)', '--tw-ring-color': 'var(--primary-blue)' } as React.CSSProperties}
             placeholder="Beskriv vad du behöver hjälp med..."
           />
         </div>
         <button
           type="submit"
-          className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+          className="w-full py-3 text-white font-semibold transition hover:opacity-90"
+          style={{ backgroundColor: 'var(--primary-blue)', borderRadius: 'var(--border-radius)' }}
         >
           Skicka offertförfrågan
         </button>

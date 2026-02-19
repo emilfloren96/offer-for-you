@@ -1,7 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --primary-blue: #004494;
+  --accent-red: #e30613;
+  --bg-white: #ffffff;
+  --bg-light-grey: #f8f9fa;
+  --text-main: #212529;
+  --border-radius: 4px;
+
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 }
