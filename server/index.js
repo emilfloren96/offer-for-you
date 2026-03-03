@@ -1,13 +1,82 @@
 import express from "express";
 import cors from "cors";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import db from "./db.js";
 
 const app = express();
 const PORT = 3001;
+const JWT_SECRET = process.env.JWT_SECRET ?? "changeme-dev-secret";
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Auth middleware
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    req.company = jwt.verify(auth.slice(7), JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: "Invalid token" });
+  }
+}
+
+// ------------------------------------
+// POST /api/auth/register
+// ------------------------------------
+app.post("/api/auth/register", async (req, res) => {
+  const { companyName, email, password } = req.body;
+  if (!companyName || !email || !password) {
+    return res.status(400).json({ error: "companyName, email och password krävs." });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Lösenordet måste vara minst 6 tecken." });
+  }
+  const existing = db.prepare("SELECT id FROM Companies WHERE email = ?").get(email);
+  if (existing) {
+    return res.status(409).json({ error: "E-postadressen är redan registrerad." });
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  const result = db.prepare(
+    "INSERT INTO Companies (company_name, email, password_hash) VALUES (?, ?, ?)"
+  ).run(companyName, email, passwordHash);
+
+  const token = jwt.sign(
+    { id: result.lastInsertRowid, email, companyName },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+  res.status(201).json({ token, companyName });
+});
+
+// ------------------------------------
+// POST /api/auth/login
+// ------------------------------------
+app.post("/api/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: "email och password krävs." });
+  }
+  const company = db.prepare("SELECT * FROM Companies WHERE email = ?").get(email);
+  if (!company) {
+    return res.status(401).json({ error: "Felaktig e-post eller lösenord." });
+  }
+  const match = await bcrypt.compare(password, company.password_hash);
+  if (!match) {
+    return res.status(401).json({ error: "Felaktig e-post eller lösenord." });
+  }
+  const token = jwt.sign(
+    { id: company.id, email: company.email, companyName: company.company_name },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+  res.json({ token, companyName: company.company_name });
+});
 
 // ------------------------------------
 // GET /api/products — Fetch all products
@@ -98,6 +167,98 @@ app.post("/api/calculate", (req, res) => {
     totalSale: Math.round(totalSale * 100) / 100,
     profit: Math.round((totalSale - totalCost) * 100) / 100,
   });
+});
+
+// ------------------------------------
+// POST /api/offers — Save a submitted offer
+// ------------------------------------
+app.post("/api/offers", (req, res) => {
+  const { customer, shape, floors, totalPrice, items } = req.body;
+
+  if (!customer?.name || !customer?.email) {
+    return res.status(400).json({ error: "customer.name and customer.email are required." });
+  }
+  if (!shape || !Number.isInteger(floors)) {
+    return res.status(400).json({ error: "shape and floors are required." });
+  }
+  if (typeof totalPrice !== "number") {
+    return res.status(400).json({ error: "totalPrice must be a number." });
+  }
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: "items must be a non-empty array." });
+  }
+
+  const stmt = db.prepare(`
+    INSERT INTO Offers
+      (customer_name, customer_email, customer_phone, message, shape, floors, total_price, items_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const result = stmt.run(
+    customer.name,
+    customer.email,
+    customer.phone ?? "",
+    customer.message ?? "",
+    shape,
+    floors,
+    totalPrice,
+    JSON.stringify(items)
+  );
+
+  res.status(201).json({ id: result.lastInsertRowid });
+});
+
+// ------------------------------------
+// GET /api/offers — Fetch all offers (company dashboard)
+// ------------------------------------
+app.get("/api/offers", requireAuth, (req, res) => {
+  const offers = db
+    .prepare("SELECT * FROM Offers ORDER BY created_at DESC")
+    .all();
+  res.json(offers);
+});
+
+// ------------------------------------
+// POST /api/job-requests — Submit a Quick Post job request
+// ------------------------------------
+app.post("/api/job-requests", (req, res) => {
+  const { title, description, category, contactName, contactEmail, contactPhone } = req.body;
+
+  if (!title || !contactName || !contactEmail) {
+    return res.status(400).json({ error: "title, contactName och contactEmail krävs." });
+  }
+
+  const result = db.prepare(`
+    INSERT INTO JobRequests (title, description, category, contact_name, contact_email, contact_phone)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(
+    title,
+    description ?? "",
+    category ?? "other",
+    contactName,
+    contactEmail,
+    contactPhone ?? ""
+  );
+
+  res.status(201).json({ id: result.lastInsertRowid });
+});
+
+// ------------------------------------
+// GET /api/job-requests — Fetch all open job requests (companies only)
+// ------------------------------------
+app.get("/api/job-requests", requireAuth, (req, res) => {
+  const { category } = req.query;
+
+  let query = "SELECT * FROM JobRequests WHERE status = 'open' ORDER BY created_at DESC";
+  const params = [];
+
+  if (category && category !== "all") {
+    query = "SELECT * FROM JobRequests WHERE status = 'open' AND category = ? ORDER BY created_at DESC";
+    params.push(category);
+  }
+
+  const jobs = db.prepare(query).all(...params);
+  res.json(jobs);
 });
 
 // Start server

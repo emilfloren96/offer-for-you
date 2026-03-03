@@ -50,4 +50,46 @@ if (count.n === 0) {
   console.log("Database seeded with 5 products.");
 }
 
+// Create the Offers table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS Offers (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
+    customer_name  TEXT    NOT NULL,
+    customer_email TEXT    NOT NULL,
+    customer_phone TEXT    NOT NULL DEFAULT '',
+    message        TEXT    NOT NULL DEFAULT '',
+    shape          TEXT    NOT NULL,
+    floors         INTEGER NOT NULL,
+    total_price    REAL    NOT NULL,
+    items_json     TEXT    NOT NULL
+  )
+`);
+
+// Create the Companies table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS Companies (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+    company_name  TEXT    NOT NULL,
+    email         TEXT    NOT NULL UNIQUE,
+    password_hash TEXT    NOT NULL
+  )
+`);
+
+// Create the JobRequests table (Quick Post / Open Leads)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS JobRequests (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
+    title          TEXT    NOT NULL,
+    description    TEXT    NOT NULL DEFAULT '',
+    category       TEXT    NOT NULL DEFAULT 'other',
+    contact_name   TEXT    NOT NULL,
+    contact_email  TEXT    NOT NULL,
+    contact_phone  TEXT    NOT NULL DEFAULT '',
+    status         TEXT    NOT NULL DEFAULT 'open'
+  )
+`);
+
 export default db;

@@ -1,8 +1,9 @@
 interface HeaderProps {
   onCreateOffer: () => void;
+  onCompany: () => void;
 }
 
-export function Header({ onCreateOffer }: HeaderProps) {
+export function Header({ onCreateOffer, onCompany }: HeaderProps) {
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 sm:h-16">
@@ -40,6 +41,13 @@ export function Header({ onCreateOffer }: HeaderProps) {
             </svg>
             070-123 45 67
           </a>
+          <button
+            onClick={onCompany}
+            className="hidden sm:block px-3 py-1.5 text-xs font-semibold transition hover:opacity-70"
+            style={{ color: 'var(--text-main)' }}
+          >
+            Företag
+          </button>
           <button
             onClick={onCreateOffer}
             className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white transition hover:opacity-90"
