@@ -8,7 +8,20 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 // ── Garden (grass + trees) ──────────────────────────────────────────────────
-function Garden() {
+interface EnvProps {
+  selectedPart: string | null;
+  hoveredPart: string | null;
+  onClickPart: (cat: string) => void;
+  onHoverPart: (cat: string | null) => void;
+}
+
+function envColor(category: string, base: number, selected: string | null, hovered: string | null): number {
+  if (selected === category) return 0x004494;
+  if (hovered === category) return 0x3a7fd4;
+  return base;
+}
+
+function Garden({ selectedPart, hoveredPart, onClickPart, onHoverPart }: EnvProps) {
   const trees = useMemo(() => {
     let s = 42;
     const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
@@ -19,21 +32,30 @@ function Garden() {
     });
   }, []);
 
+  const h = {
+    onClick:       (e: ThreeEvent<MouseEvent>)   => { e.stopPropagation(); onClickPart("garden"); },
+    onPointerOver: (e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); onHoverPart("garden"); document.body.style.cursor = "pointer"; },
+    onPointerOut:  ()                             => { onHoverPart(null);  document.body.style.cursor = "default"; },
+  };
+  const grassColor  = envColor("garden", 0x4a8c3f, selectedPart, hoveredPart);
+  const trunkColor  = envColor("garden", 0x6b4226, selectedPart, hoveredPart);
+  const canopyColor = envColor("garden", 0x2d6a2d, selectedPart, hoveredPart);
+
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} {...h}>
         <planeGeometry args={[14, 14]} />
-        <meshStandardMaterial color={0x4a8c3f} />
+        <meshStandardMaterial color={grassColor} />
       </mesh>
       {trees.map((t, i) => (
         <group key={i} position={[t.x, 0, t.z]} scale={t.sc}>
-          <mesh position={[0, 0.5, 0]}>
+          <mesh position={[0, 0.5, 0]} {...h}>
             <cylinderGeometry args={[0.12, 0.18, 1, 6]} />
-            <meshStandardMaterial color={0x6b4226} />
+            <meshStandardMaterial color={trunkColor} />
           </mesh>
-          <mesh position={[0, 1.35, 0]}>
+          <mesh position={[0, 1.35, 0]} {...h}>
             <sphereGeometry args={[0.55, 8, 7]} />
-            <meshStandardMaterial color={0x2d6a2d} />
+            <meshStandardMaterial color={canopyColor} />
           </mesh>
         </group>
       ))}
@@ -42,7 +64,7 @@ function Garden() {
 }
 
 // ── Fence (posts + rails around perimeter) ──────────────────────────────────
-function Fence() {
+function Fence({ selectedPart, hoveredPart, onClickPart, onHoverPart }: EnvProps) {
   const S = 2.0;
   const postH = 0.28;
   const postW = 0.055;
@@ -72,18 +94,25 @@ function Fence() {
     return out;
   }, []);
 
+  const fh = {
+    onClick:       (e: ThreeEvent<MouseEvent>)   => { e.stopPropagation(); onClickPart("fence"); },
+    onPointerOver: (e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); onHoverPart("fence"); document.body.style.cursor = "pointer"; },
+    onPointerOut:  ()                             => { onHoverPart(null);  document.body.style.cursor = "default"; },
+  };
+  const woodColor = envColor("fence", 0x8b6914, selectedPart, hoveredPart);
+
   return (
     <group>
       {posts.map((p) => (
-        <mesh key={p.key} position={[p.x, postH / 2, p.z]}>
+        <mesh key={p.key} position={[p.x, postH / 2, p.z]} {...fh}>
           <boxGeometry args={[postW, postH, postW]} />
-          <meshStandardMaterial color={0x8b6914} />
+          <meshStandardMaterial color={woodColor} />
         </mesh>
       ))}
       {rails.map((r, i) => (
-        <mesh key={i} position={r.pos}>
+        <mesh key={i} position={r.pos} {...fh}>
           <boxGeometry args={r.args} />
-          <meshStandardMaterial color={0x8b6914} />
+          <meshStandardMaterial color={woodColor} />
         </mesh>
       ))}
     </group>
@@ -110,7 +139,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   walls:      "Väggar",
   foundation: "Grund",
   terrace:    "Terrass",
-  interior:   "Interiör",
+  interior:   "Interi\u00f6r",
+  garden:     "Tr\u00e4dg\u00e5rd",
+  fence:      "Staket",
 };
 
 const FLOOR_SUFFIX: Record<number, string> = {
@@ -330,8 +361,6 @@ export function ModelViewer({
   onAreasCalculated,
 }: ModelViewerProps) {
   const [hoveredPart, setHoveredPart] = useState<string | null>(null);
-  const [showGarden, setShowGarden] = useState(false);
-  const [showFence, setShowFence] = useState(false);
 
   function SelectorButton({
     active, onClick, children,
@@ -372,16 +401,6 @@ export function ModelViewer({
         ))}
       </div>
 
-      {/* Environment toggles */}
-      <div className="flex gap-2 mb-3">
-        <SelectorButton active={showGarden} onClick={() => setShowGarden((v) => !v)}>
-          Trädgård
-        </SelectorButton>
-        <SelectorButton active={showFence} onClick={() => setShowFence((v) => !v)}>
-          Staket
-        </SelectorButton>
-      </div>
-
       <div
         className="w-full h-[300px] sm:h-[500px] overflow-hidden shadow-lg"
         style={{ borderRadius: "var(--border-radius)", background: "#1a2030", position: "relative" }}
@@ -392,8 +411,18 @@ export function ModelViewer({
           <directionalLight position={[-4, 4, -4]} intensity={0.5} />
           <hemisphereLight args={[0xddeeff, 0x334455, 0.6]} />
           <Suspense fallback={null}>
-            {showGarden && <Garden />}
-            {showFence && <Fence />}
+            <Garden
+              selectedPart={selectedPart}
+              hoveredPart={hoveredPart}
+              onClickPart={onSelectPart}
+              onHoverPart={setHoveredPart}
+            />
+            <Fence
+              selectedPart={selectedPart}
+              hoveredPart={hoveredPart}
+              onClickPart={onSelectPart}
+              onHoverPart={setHoveredPart}
+            />
             <Model
               key={`${selectedShape}-${selectedFloors}`}
               selectedPart={selectedPart}
