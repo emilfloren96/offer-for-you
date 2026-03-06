@@ -7,6 +7,90 @@ import { useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
+// ── Garden (grass + trees) ──────────────────────────────────────────────────
+function Garden() {
+  const trees = useMemo(() => {
+    let s = 42;
+    const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    return Array.from({ length: 10 }, (_, i) => {
+      const angle = (i / 10) * Math.PI * 2 + rand() * 0.4;
+      const r = 2.4 + rand() * 0.9;
+      return { x: Math.cos(angle) * r, z: Math.sin(angle) * r, sc: 0.28 + rand() * 0.18 };
+    });
+  }, []);
+
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+        <planeGeometry args={[14, 14]} />
+        <meshStandardMaterial color={0x4a8c3f} />
+      </mesh>
+      {trees.map((t, i) => (
+        <group key={i} position={[t.x, 0, t.z]} scale={t.sc}>
+          <mesh position={[0, 0.5, 0]}>
+            <cylinderGeometry args={[0.12, 0.18, 1, 6]} />
+            <meshStandardMaterial color={0x6b4226} />
+          </mesh>
+          <mesh position={[0, 1.35, 0]}>
+            <sphereGeometry args={[0.55, 8, 7]} />
+            <meshStandardMaterial color={0x2d6a2d} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+// ── Fence (posts + rails around perimeter) ──────────────────────────────────
+function Fence() {
+  const S = 2.0;
+  const postH = 0.28;
+  const postW = 0.055;
+  const n = 9;
+
+  const posts = useMemo(() => {
+    const out: { x: number; z: number; key: string }[] = [];
+    for (let side = 0; side < 4; side++) {
+      for (let i = 0; i <= n; i++) {
+        const t = -S + (i / n) * S * 2;
+        const coords = [[t, -S], [S, t], [t, S], [-S, t]];
+        const [x, z] = coords[side];
+        out.push({ x, z, key: `${side}-${i}` });
+      }
+    }
+    return out;
+  }, []);
+
+  const rails = useMemo(() => {
+    const out: { pos: [number, number, number]; args: [number, number, number] }[] = [];
+    [0.22, 0.11].forEach((y) => {
+      out.push({ pos: [0, y, -S],  args: [S * 2 + postW, 0.03, postW] });
+      out.push({ pos: [0, y,  S],  args: [S * 2 + postW, 0.03, postW] });
+      out.push({ pos: [-S, y, 0],  args: [postW, 0.03, S * 2 + postW] });
+      out.push({ pos: [ S, y, 0],  args: [postW, 0.03, S * 2 + postW] });
+    });
+    return out;
+  }, []);
+
+  return (
+    <group>
+      {posts.map((p) => (
+        <mesh key={p.key} position={[p.x, postH / 2, p.z]}>
+          <boxGeometry args={[postW, postH, postW]} />
+          <meshStandardMaterial color={0x8b6914} />
+        </mesh>
+      ))}
+      {rails.map((r, i) => (
+        <mesh key={i} position={r.pos}>
+          <boxGeometry args={r.args} />
+          <meshStandardMaterial color={0x8b6914} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+
 // Map mesh names to categories
 function getCategory(name: string): string | null {
   if (name.startsWith("Roof")) return "roof";
@@ -246,6 +330,8 @@ export function ModelViewer({
   onAreasCalculated,
 }: ModelViewerProps) {
   const [hoveredPart, setHoveredPart] = useState<string | null>(null);
+  const [showGarden, setShowGarden] = useState(false);
+  const [showFence, setShowFence] = useState(false);
 
   function SelectorButton({
     active, onClick, children,
@@ -286,6 +372,16 @@ export function ModelViewer({
         ))}
       </div>
 
+      {/* Environment toggles */}
+      <div className="flex gap-2 mb-3">
+        <SelectorButton active={showGarden} onClick={() => setShowGarden((v) => !v)}>
+          Trädgård
+        </SelectorButton>
+        <SelectorButton active={showFence} onClick={() => setShowFence((v) => !v)}>
+          Staket
+        </SelectorButton>
+      </div>
+
       <div
         className="w-full h-[300px] sm:h-[500px] overflow-hidden shadow-lg"
         style={{ borderRadius: "var(--border-radius)", background: "#1a2030", position: "relative" }}
@@ -296,6 +392,8 @@ export function ModelViewer({
           <directionalLight position={[-4, 4, -4]} intensity={0.5} />
           <hemisphereLight args={[0xddeeff, 0x334455, 0.6]} />
           <Suspense fallback={null}>
+            {showGarden && <Garden />}
+            {showFence && <Fence />}
             <Model
               key={`${selectedShape}-${selectedFloors}`}
               selectedPart={selectedPart}
