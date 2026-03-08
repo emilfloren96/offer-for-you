@@ -130,7 +130,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
               ← Tillbaka
             </button>
             <span className="text-gray-300">|</span>
-            <span className="font-bold" style={{ color: 'var(--primary-blue)' }}>Företagspanel</span>
+            <h1 className="font-bold" style={{ color: 'var(--primary-blue)' }}>Företagspanel</h1>
             <span className="hidden sm:inline text-xs px-2 py-0.5 rounded-full bg-gray-100 font-medium" style={{ color: "#4b5563" }}>
               {companyName}
             </span>
@@ -151,7 +151,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
             className="px-5 py-3 text-sm font-semibold border-b-2 transition"
             style={{
               borderColor: tab === 'jobs' ? 'var(--primary-blue)' : 'transparent',
-              color: tab === 'jobs' ? 'var(--primary-blue)' : '#6b7280',
+              color: tab === 'jobs' ? 'var(--primary-blue)' : '#4b5563',
             }}
           >
             Hitta jobb
@@ -166,7 +166,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
             className="px-5 py-3 text-sm font-semibold border-b-2 transition"
             style={{
               borderColor: tab === 'offers' ? 'var(--primary-blue)' : 'transparent',
-              color: tab === 'offers' ? 'var(--primary-blue)' : '#6b7280',
+              color: tab === 'offers' ? 'var(--primary-blue)' : '#4b5563',
             }}
           >
             Inkomna offerter
@@ -179,7 +179,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
         </div>
       </div>
 
-      <main>
+      <div>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
         {/* ── JOB BOARD TAB ── */}
@@ -204,12 +204,12 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
             </div>
 
             {jobsLoading ? (
-              <p className="text-center mt-20" style={{ color: "#6b7280" }}>Laddar jobbförfrågningar…</p>
+              <p className="text-center mt-20" style={{ color: "#4b5563" }}>Laddar jobbförfrågningar…</p>
             ) : jobsError ? (
               <p className="text-center mt-20 text-sm" style={{ color: 'var(--accent-red)' }}>{jobsError}</p>
             ) : jobs.length === 0 ? (
               <div className="text-center mt-20">
-                <p style={{ color: "#6b7280" }}>Inga öppna jobbförfrågningar{categoryFilter !== 'all' ? ' i denna kategori' : ''} just nu.</p>
+                <p style={{ color: "#4b5563" }}>Inga öppna jobbförfrågningar{categoryFilter !== 'all' ? ' i denna kategori' : ''} just nu.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -301,11 +301,11 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
         {tab === 'offers' && (
           <div>
             {offersLoading ? (
-              <p className="text-center mt-20" style={{ color: "#6b7280" }}>Laddar offerter…</p>
+              <p className="text-center mt-20" style={{ color: "#4b5563" }}>Laddar offerter…</p>
             ) : offersError ? (
               <p className="text-center mt-20 text-sm" style={{ color: 'var(--accent-red)' }}>{offersError}</p>
             ) : offers.length === 0 ? (
-              <p className="text-center mt-20" style={{ color: "#6b7280" }}>Inga offerter inkomna ännu.</p>
+              <p className="text-center mt-20" style={{ color: "#4b5563" }}>Inga offerter inkomna ännu.</p>
             ) : (
               <div className="space-y-4">
                 <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--primary-blue)' }}>
@@ -401,7 +401,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
           </div>
         )}
       </div>
-      </main>
+      </div>
     </div>
   );
 }

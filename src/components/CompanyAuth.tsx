@@ -64,9 +64,9 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
 
   return (
     <div className="max-w-sm mx-auto mt-16 px-4">
-      <h2 className="text-2xl font-bold mb-2 text-center" style={{ color: 'var(--primary-blue)' }}>
+      <h1 className="text-2xl font-bold mb-2 text-center" style={{ color: 'var(--primary-blue)' }}>
         Företagspanel
-      </h2>
+      </h1>
       <div className="w-12 h-[3px] mx-auto mb-8" style={{ backgroundColor: 'var(--accent-red)' }} />
 
       {/* Tabs */}

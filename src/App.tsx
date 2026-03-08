@@ -199,7 +199,8 @@ function App() {
       );
     }
     return (
-      <Suspense fallback={null}>
+      <main>
+      <Suspense fallback={<div className="min-h-screen" style={{ backgroundColor: "var(--bg-white)" }} />}>
       <CompanyDashboard
         token={companyToken}
         companyName={companyName}
@@ -207,6 +208,7 @@ function App() {
         onLogout={handleCompanyLogout}
       />
       </Suspense>
+      </main>
     );
   }
 
