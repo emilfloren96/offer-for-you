@@ -156,12 +156,14 @@ function Controls() {
     controls.enableDamping = true;
     controls.enablePan = true;
     controls.target.set(0, 0, 0);
+    let rafId: number;
     const animate = () => {
-      requestAnimationFrame(animate);
+      rafId = requestAnimationFrame(animate);
       controls.update();
     };
     animate();
     return () => {
+      cancelAnimationFrame(rafId);
       controls.dispose();
     };
   }, [camera, gl]);
@@ -185,8 +187,8 @@ function NavHud() {
     }}>
       {items.map((item) => (
         <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 11, opacity: 0.7, width: 16, textAlign: "center" }}>{item.icon}</span>
-          <span style={{ fontSize: 10, color: "#fff", opacity: 0.55, width: 52 }}>{item.label}:</span>
+          <span style={{ fontSize: 11, opacity: 0.85, width: 16, textAlign: "center" }}>{item.icon}</span>
+          <span style={{ fontSize: 10, color: "#fff", opacity: 0.8, width: 52 }}>{item.label}:</span>
           <span style={{ fontSize: 10, color: "#fff", opacity: 0.9 }}>{item.hint}</span>
         </div>
       ))}
@@ -368,6 +370,7 @@ export function ModelViewer({
     return (
       <button
         onClick={onClick}
+        aria-pressed={active}
         className="px-3 sm:px-4 py-2 font-semibold text-xs sm:text-sm transition"
         style={{
           borderRadius: "var(--border-radius)",
@@ -403,9 +406,10 @@ export function ModelViewer({
 
       <div
         className="w-full h-[300px] sm:h-[500px] overflow-hidden shadow-lg"
+        aria-label="Interaktiv 3D-modell av hus. Klicka på en byggdel för att välja material."
         style={{ borderRadius: "var(--border-radius)", background: "#1a2030", position: "relative" }}
       >
-        <Canvas camera={{ position: [0, 2, -5], fov: 50 }}>
+        <Canvas camera={{ position: [0, 2, -5], fov: 50 }} aria-label="Interaktiv 3D-modell av hus" role="img">
           <ambientLight intensity={0.6} />
           <directionalLight position={[5, 8, 5]} intensity={1.4} />
           <directionalLight position={[-4, 4, -4]} intensity={0.5} />

@@ -24,9 +24,9 @@ export function CostSummary({ selections, total, onOpenOfferForm }: CostSummaryP
           <div className="space-y-1">
             {items.map((sel) => (
               <div key={sel.category} className="flex justify-between text-sm">
-                <span style={{ opacity: 0.75 }}>
+                <span style={{ color: '#4b5563' }}>
                   {CATEGORY_LABELS_SV[sel.category]}: {sel.material.name}
-                  <span className="ml-2 text-xs" style={{ opacity: 0.5 }}>
+                  <span className="ml-2 text-xs" style={{ color: '#4b5563' }}>
                     {sel.quantity} {UNIT_LABEL[sel.material.unit]} × {sel.material.price.toLocaleString('sv-SE')} kr
                   </span>
                 </span>
@@ -44,6 +44,8 @@ export function CostSummary({ selections, total, onOpenOfferForm }: CostSummaryP
         {/* Toggle breakdown */}
         <button
           onClick={() => setExpanded((e) => !e)}
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Dölj kostnadsuppdelning' : 'Visa kostnadsuppdelning'}
           className="flex items-center gap-1 text-sm font-medium"
           style={{ color: 'var(--text-main)' }}
         >
@@ -53,7 +55,7 @@ export function CostSummary({ selections, total, onOpenOfferForm }: CostSummaryP
 
         {/* Total */}
         <div className="flex-1">
-          <span className="text-xs font-semibold uppercase tracking-wide" style={{ opacity: 0.5 }}>
+          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#4b5563' }}>
             Totalt
           </span>
           <div className="text-lg font-extrabold" style={{ color: 'var(--primary-blue)' }}>

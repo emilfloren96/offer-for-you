@@ -131,7 +131,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
             </button>
             <span className="text-gray-300">|</span>
             <span className="font-bold" style={{ color: 'var(--primary-blue)' }}>Företagspanel</span>
-            <span className="hidden sm:inline text-xs px-2 py-0.5 rounded-full bg-gray-100 font-medium" style={{ opacity: 0.6 }}>
+            <span className="hidden sm:inline text-xs px-2 py-0.5 rounded-full bg-gray-100 font-medium" style={{ color: "#4b5563" }}>
               {companyName}
             </span>
           </div>
@@ -151,8 +151,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
             className="px-5 py-3 text-sm font-semibold border-b-2 transition"
             style={{
               borderColor: tab === 'jobs' ? 'var(--primary-blue)' : 'transparent',
-              color: tab === 'jobs' ? 'var(--primary-blue)' : undefined,
-              opacity: tab === 'jobs' ? 1 : 0.5,
+              color: tab === 'jobs' ? 'var(--primary-blue)' : '#6b7280',
             }}
           >
             Hitta jobb
@@ -167,8 +166,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
             className="px-5 py-3 text-sm font-semibold border-b-2 transition"
             style={{
               borderColor: tab === 'offers' ? 'var(--primary-blue)' : 'transparent',
-              color: tab === 'offers' ? 'var(--primary-blue)' : undefined,
-              opacity: tab === 'offers' ? 1 : 0.5,
+              color: tab === 'offers' ? 'var(--primary-blue)' : '#6b7280',
             }}
           >
             Inkomna offerter
@@ -181,6 +179,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
         </div>
       </div>
 
+      <main>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
         {/* ── JOB BOARD TAB ── */}
@@ -205,12 +204,12 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
             </div>
 
             {jobsLoading ? (
-              <p className="text-center mt-20" style={{ opacity: 0.4 }}>Laddar jobbförfrågningar…</p>
+              <p className="text-center mt-20" style={{ color: "#6b7280" }}>Laddar jobbförfrågningar…</p>
             ) : jobsError ? (
               <p className="text-center mt-20 text-sm" style={{ color: 'var(--accent-red)' }}>{jobsError}</p>
             ) : jobs.length === 0 ? (
               <div className="text-center mt-20">
-                <p style={{ opacity: 0.5 }}>Inga öppna jobbförfrågningar{categoryFilter !== 'all' ? ' i denna kategori' : ''} just nu.</p>
+                <p style={{ color: "#6b7280" }}>Inga öppna jobbförfrågningar{categoryFilter !== 'all' ? ' i denna kategori' : ''} just nu.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -236,28 +235,28 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                             {catLabel}
                           </span>
                           <span className="font-bold">{job.title}</span>
-                          <span className="text-xs" style={{ opacity: 0.5 }}>{timeAgo(job.created_at)}</span>
+                          <span className="text-xs" style={{ color: "#4b5563" }}>{timeAgo(job.created_at)}</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium" style={{ opacity: 0.7 }}>{job.contact_name}</span>
-                          <span style={{ opacity: 0.4 }}>{isOpen ? '▲' : '▼'}</span>
+                          <span className="text-sm font-medium" style={{ color: "#4b5563" }}>{job.contact_name}</span>
+                          <span aria-hidden="true" style={{ color: "#9ca3af" }}>{isOpen ? "▲" : "▼"}</span>
                         </div>
                       </button>
 
                       {isOpen && (
                         <div className="border-t border-gray-100 px-5 py-4">
                           {job.description && (
-                            <p className="text-sm mb-4 leading-relaxed" style={{ opacity: 0.8 }}>
+                            <p className="text-sm mb-4 leading-relaxed" style={{ color: "#4b5563" }}>
                               {job.description}
                             </p>
                           )}
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                             <div>
-                              <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ opacity: 0.4 }}>Namn</div>
+                              <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: "#4b5563" }}>Namn</div>
                               <div className="font-medium">{job.contact_name}</div>
                             </div>
                             <div>
-                              <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ opacity: 0.4 }}>E-post</div>
+                              <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: "#4b5563" }}>E-post</div>
                               <a
                                 href={`mailto:${job.contact_email}`}
                                 className="font-medium hover:underline"
@@ -268,7 +267,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                             </div>
                             {job.contact_phone && (
                               <div>
-                                <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ opacity: 0.4 }}>Telefon</div>
+                                <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: "#4b5563" }}>Telefon</div>
                                 <a
                                   href={`tel:${job.contact_phone}`}
                                   className="font-medium hover:underline"
@@ -302,11 +301,11 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
         {tab === 'offers' && (
           <div>
             {offersLoading ? (
-              <p className="text-center mt-20" style={{ opacity: 0.4 }}>Laddar offerter…</p>
+              <p className="text-center mt-20" style={{ color: "#6b7280" }}>Laddar offerter…</p>
             ) : offersError ? (
               <p className="text-center mt-20 text-sm" style={{ color: 'var(--accent-red)' }}>{offersError}</p>
             ) : offers.length === 0 ? (
-              <p className="text-center mt-20" style={{ opacity: 0.5 }}>Inga offerter inkomna ännu.</p>
+              <p className="text-center mt-20" style={{ color: "#6b7280" }}>Inga offerter inkomna ännu.</p>
             ) : (
               <div className="space-y-4">
                 <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--primary-blue)' }}>
@@ -330,12 +329,12 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                         onClick={() => setExpandedOfferId(isOpen ? null : offer.id)}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
-                          <span className="text-xs font-semibold uppercase tracking-wide" style={{ opacity: 0.4 }}>
+                          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#4b5563" }}>
                             #{offer.id} · {date}
                           </span>
                           <span className="font-bold">{offer.customer_name}</span>
-                          <span className="text-sm" style={{ opacity: 0.6 }}>{offer.customer_email}</span>
-                          <span className="text-xs px-2 py-0.5 rounded-full border border-gray-200" style={{ opacity: 0.7 }}>
+                          <span className="text-sm" style={{ color: "#4b5563" }}>{offer.customer_email}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full border border-gray-200" style={{ color: "#4b5563" }}>
                             {shapeLabel[offer.shape] ?? offer.shape} · {offer.floors} vån
                           </span>
                         </div>
@@ -343,7 +342,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                           <span className="font-extrabold" style={{ color: 'var(--primary-blue)' }}>
                             {offer.total_price.toLocaleString('sv-SE')} kr
                           </span>
-                          <span style={{ opacity: 0.4 }}>{isOpen ? '▲' : '▼'}</span>
+                          <span aria-hidden="true" style={{ color: "#9ca3af" }}>{isOpen ? "▲" : "▼"}</span>
                         </div>
                       </button>
 
@@ -352,13 +351,13 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 text-sm">
                             {offer.customer_phone && (
                               <div>
-                                <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ opacity: 0.4 }}>Telefon</div>
+                                <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: "#4b5563" }}>Telefon</div>
                                 <div>{offer.customer_phone}</div>
                               </div>
                             )}
                             {offer.message && (
                               <div className="sm:col-span-2">
-                                <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ opacity: 0.4 }}>Meddelande</div>
+                                <div className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: "#4b5563" }}>Meddelande</div>
                                 <div>{offer.message}</div>
                               </div>
                             )}
@@ -366,7 +365,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
 
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="text-left text-xs font-semibold uppercase tracking-wide" style={{ opacity: 0.4 }}>
+                              <tr className="text-left text-xs font-semibold uppercase tracking-wide" style={{ color: "#4b5563" }}>
                                 <th className="pb-2">Del</th>
                                 <th className="pb-2">Material</th>
                                 <th className="pb-2 text-right">Mängd</th>
@@ -402,6 +401,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
           </div>
         )}
       </div>
+      </main>
     </div>
   );
 }

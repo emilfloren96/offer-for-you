@@ -41,6 +41,7 @@ export function MaterialPanel({
         </h3>
         <button
           onClick={onClose}
+          aria-label="Stäng"
           className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
         >
           &times;
@@ -50,7 +51,7 @@ export function MaterialPanel({
 
       {/* Area display */}
       {area > 0 && (
-        <p className="text-sm mb-4" style={{ opacity: 0.6 }}>
+        <p className="text-sm mb-4" style={{ color: '#4b5563' }}>
           Beräknad yta: <strong>{area.toFixed(1)} m²</strong>
         </p>
       )}
@@ -61,16 +62,18 @@ export function MaterialPanel({
           <span className="text-sm font-semibold flex-1">Antal fönster</span>
           <button
             onClick={() => onChangeWindowCount(Math.max(1, windowCount - 1))}
+            aria-label="Minska antal fönster"
             className="w-8 h-8 flex items-center justify-center text-lg font-bold border border-gray-300 rounded transition hover:border-blue-400"
             style={{ color: 'var(--primary-blue)' }}
           >
             −
           </button>
-          <span className="w-6 text-center font-bold text-base" style={{ color: 'var(--primary-blue)' }}>
+          <span aria-live="polite" aria-atomic="true" className="w-6 text-center font-bold text-base" style={{ color: 'var(--primary-blue)' }}>
             {windowCount}
           </span>
           <button
             onClick={() => onChangeWindowCount(Math.min(30, windowCount + 1))}
+            aria-label="Öka antal fönster"
             className="w-8 h-8 flex items-center justify-center text-lg font-bold border border-gray-300 rounded transition hover:border-blue-400"
             style={{ color: 'var(--primary-blue)' }}
           >
@@ -81,7 +84,7 @@ export function MaterialPanel({
 
       {materials ? (
         <>
-          <p className="text-sm mb-4" style={{ opacity: 0.7 }}>
+          <p className="text-sm mb-4" style={{ color: '#4b5563' }}>
             Välj ett material för {titleSv.toLowerCase()}:
           </p>
 
@@ -103,6 +106,7 @@ export function MaterialPanel({
                 >
                   {/* Colour swatch */}
                   <span
+                    aria-hidden="true"
                     className="shrink-0 w-6 h-6 rounded-sm border border-gray-200"
                     style={{ backgroundColor: `#${mat.colour.toString(16).padStart(6, '0')}` }}
                   />
@@ -121,7 +125,7 @@ export function MaterialPanel({
           </div>
         </>
       ) : (
-        <p className="text-sm mb-6" style={{ opacity: 0.7 }}>
+        <p className="text-sm mb-6" style={{ color: '#4b5563' }}>
           Klicka på en annan del av modellen för att välja material, eller skicka en offertförfrågan för {titleSv.toLowerCase()}.
         </p>
       )}

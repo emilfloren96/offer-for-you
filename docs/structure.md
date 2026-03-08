@@ -25,7 +25,7 @@
 - `CompanyDashboard.tsx` - dashboard for companies to see incoming offers
 - `QuickPost.tsx` - modal for homeowners to describe a job in plain text
 
-### src/data/ - static data
+## src/data/ - static data
 
 - `materials.ts` - all materials, prices, units and colors for each building part
 

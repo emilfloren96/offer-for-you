@@ -1,12 +1,8 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, lazy, Suspense } from "react";
 import { Header } from "./components/Header";
-import { ModelViewer } from "./components/ModelViewer";
-import { MaterialPanel } from "./components/MaterialPanel";
 import { CostSummary } from "./components/CostSummary";
 import { OfferPanel, BACKEND } from "./components/OfferPanel";
-import { CompanyDashboard } from "./components/CompanyDashboard";
 import { CompanyAuth } from "./components/CompanyAuth";
-import { QuickPost } from "./components/QuickPost";
 import {
   deriveQuantity,
   type Material,
@@ -14,6 +10,11 @@ import {
   type CustomerInfo,
   type OfferLineItem,
 } from "./data/materials";
+
+const ModelViewer = lazy(() => import("./components/ModelViewer").then(m => ({ default: m.ModelViewer })));
+const MaterialPanel = lazy(() => import("./components/MaterialPanel").then(m => ({ default: m.MaterialPanel })));
+const CompanyDashboard = lazy(() => import("./components/CompanyDashboard").then(m => ({ default: m.CompanyDashboard })));
+const QuickPost = lazy(() => import("./components/QuickPost").then(m => ({ default: m.QuickPost })));
 
 type View = "configurator" | "company";
 
@@ -193,17 +194,19 @@ function App() {
               <span className="font-bold" style={{ color: "var(--primary-blue)" }}>Företagspanel</span>
             </div>
           </div>
-          <CompanyAuth onAuth={handleCompanyAuth} />
+          <main><CompanyAuth onAuth={handleCompanyAuth} /></main>
         </div>
       );
     }
     return (
+      <Suspense fallback={null}>
       <CompanyDashboard
         token={companyToken}
         companyName={companyName}
         onBack={() => setView("configurator")}
         onLogout={handleCompanyLogout}
       />
+      </Suspense>
     );
   }
 
@@ -219,6 +222,12 @@ function App() {
         paddingBottom: hasSelections ? "80px" : undefined,
       }}
     >
+      <a
+        href="#main-content"
+        className="skip-link"
+      >
+        Hoppa till innehåll
+      </a>
       <Header
         onCreateOffer={landingMounted ? dismissLanding : scrollToOffer}
         onCompany={() => setView("company")}
@@ -228,6 +237,9 @@ function App() {
       {cartModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cart-modal-title"
           style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
         >
           <div
@@ -235,13 +247,13 @@ function App() {
             style={{ borderRadius: "var(--border-radius)" }}
           >
             <div className="text-center mb-1">
-              <span className="text-3xl">✓</span>
+              <span className="text-3xl" aria-hidden="true">✓</span>
             </div>
-            <h3 className="text-lg font-bold text-center mb-1" style={{ color: "var(--primary-blue)" }}>
+            <h3 id="cart-modal-title" className="text-lg font-bold text-center mb-1" style={{ color: "var(--primary-blue)" }}>
               Material tillagt!
             </h3>
             <div className="w-10 h-[3px] mx-auto mb-4" style={{ backgroundColor: "var(--accent-red)" }} />
-            <p className="text-sm text-center mb-6" style={{ opacity: 0.7 }}>
+            <p className="text-sm text-center mb-6" style={{ color: '#4b5563' }}>
               Vill du lägga till fler produkter, eller är du klar?
             </p>
             <div className="flex flex-col gap-3">
@@ -273,16 +285,20 @@ function App() {
       {quickPostOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Snabbpost"
           style={{ backgroundColor: "rgba(0,0,0,0.45)", overflowY: "auto" }}
         >
           <div className="max-w-lg w-full my-8">
-            <QuickPost onClose={() => setQuickPostOpen(false)} />
+            <Suspense fallback={null}><QuickPost onClose={() => setQuickPostOpen(false)} /></Suspense>
           </div>
         </div>
       )}
 
       {/* ── Landing Page ── */}
       {landingMounted && (
+      <main id="main-content">
         <div
           style={{
             transition: "opacity 0.5s ease, transform 0.5s ease",
@@ -317,7 +333,7 @@ function App() {
 
               <div className="w-20 h-[3px] mx-auto mb-6" style={{ backgroundColor: "var(--accent-red)" }} />
 
-              <p className="text-base sm:text-lg mb-10 max-w-xl mx-auto leading-relaxed" style={{ opacity: 0.7 }}>
+              <p className="text-base sm:text-lg mb-10 max-w-xl mx-auto leading-relaxed" style={{ color: '#4b5563' }}>
                 Hitta rätt hantverkare för ditt projekt – eller hitta ditt nästa uppdrag. Enkelt, snabbt och utan mellanhänder.
               </p>
 
@@ -327,11 +343,11 @@ function App() {
                   className="flex-1 max-w-xs mx-auto sm:mx-0 p-6 text-left bg-white shadow-md"
                   style={{ borderRadius: "var(--border-radius)" }}
                 >
-                  <div className="text-2xl mb-2">🏠</div>
-                  <h3 className="font-bold text-base mb-1" style={{ color: "var(--primary-blue)" }}>
+                  <div className="text-2xl mb-2" aria-hidden="true">🏠</div>
+                  <h2 className="font-bold text-base mb-1" style={{ color: "var(--primary-blue)" }}>
                     Jag är husägare
-                  </h3>
-                  <p className="text-xs mb-4" style={{ opacity: 0.6 }}>
+                  </h2>
+                  <p className="text-xs mb-4" style={{ color: '#4b5563' }}>
                     Beskriv ditt jobb eller använd vår 3D-kalkylator för ett exakt pris.
                   </p>
                   <div className="flex flex-col gap-2">
@@ -361,11 +377,11 @@ function App() {
                   className="flex-1 max-w-xs mx-auto sm:mx-0 p-6 text-left bg-white shadow-md"
                   style={{ borderRadius: "var(--border-radius)" }}
                 >
-                  <div className="text-2xl mb-2">🔨</div>
-                  <h3 className="font-bold text-base mb-1" style={{ color: "var(--primary-blue)" }}>
+                  <div className="text-2xl mb-2" aria-hidden="true">🔨</div>
+                  <h2 className="font-bold text-base mb-1" style={{ color: "var(--primary-blue)" }}>
                     Jag är hantverkare
-                  </h3>
-                  <p className="text-xs mb-4" style={{ opacity: 0.6 }}>
+                  </h2>
+                  <p className="text-xs mb-4" style={{ color: '#4b5563' }}>
                     Bläddra bland öppna jobb från husägare i din bransch och ta kontakt direkt.
                   </p>
                   <button
@@ -391,17 +407,18 @@ function App() {
                 ))}
               </div>
 
-              <p className="mt-6 text-xs" style={{ opacity: 0.4 }}>
+              <p className="mt-6 text-xs" style={{ color: '#4b5563' }}>
                 Gratis · Ingen registrering krävs för husägare
               </p>
             </div>
           </section>
         </div>
+      </main>
       )}
 
       {/* ── Main app (only rendered after landing is dismissed) ── */}
       {!landingMounted && (
-        <div>
+        <main id="main-content">
           {/* Hero */}
           <section
             className="py-10 sm:py-16 text-center"
@@ -420,7 +437,7 @@ function App() {
               />
               <p
                 className="text-sm sm:text-lg max-w-2xl mx-auto mb-4"
-                style={{ color: "var(--text-main)", opacity: 0.7 }}
+                style={{ color: '#4b5563' }}
               >
                 Välj husform, klicka på en byggdel och få en skräddarsydd offert direkt.
               </p>
@@ -447,7 +464,7 @@ function App() {
                     Välkommen
                   </h2>
                   <div className="w-12 h-[3px] mb-3 sm:mb-4" style={{ backgroundColor: "var(--accent-red)" }} />
-                  <p className="text-sm sm:text-base leading-relaxed" style={{ opacity: 0.8 }}>
+                  <p className="text-sm sm:text-base leading-relaxed" style={{ color: "#4b5563" }}>
                     Vi hjälper dig att räkna ut kostnaden för ditt byggprojekt. Välj en husform, klicka på den del du vill ha offert på, och fyll i formuläret.
                   </p>
                 </div>
@@ -469,6 +486,7 @@ function App() {
 
               {/* Right Column — 3D Viewer */}
               <div className="lg:col-span-3" ref={offerRef}>
+                <Suspense fallback={<div className="w-full h-[300px] sm:h-[500px] flex items-center justify-center text-gray-400 text-sm" style={{background:"#1a2030",borderRadius:"var(--border-radius)"}}>Laddar 3D-modell…</div>}>
                 <ModelViewer
                   selectedPart={selectedPart}
                   onSelectPart={(part) => {
@@ -482,6 +500,7 @@ function App() {
                   categoryColours={categoryColours}
                   onAreasCalculated={handleAreasCalculated}
                 />
+                </Suspense>
               </div>
             </div>
           </section>
@@ -490,6 +509,7 @@ function App() {
           {(selectedPart || offerFormOpen) && (
             <section className="pb-8 sm:pb-16">
               <div className="max-w-3xl mx-auto px-4 sm:px-6">
+                <Suspense fallback={null}>
                 {selectedPart && !offerFormOpen && (
                   <MaterialPanel
                     category={selectedPart}
@@ -513,6 +533,7 @@ function App() {
                     onClose={handleCloseOfferForm}
                   />
                 )}
+                </Suspense>
               </div>
             </section>
           )}
@@ -521,13 +542,13 @@ function App() {
           <footer className="border-t border-gray-200" style={{ padding: "12px 24px" }}>
             <div
               className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs"
-              style={{ opacity: 0.5 }}
+              style={{ color: '#4b5563' }}
             >
               <span>&copy; 2026 Offer For You. Alla rättigheter förbehållna.</span>
               <span>info@offerforyou.se · 070-123 45 67</span>
             </div>
           </footer>
-        </div>
+        </main>
       )}
 
       {/* Cost summary bar (always present when selections exist) */}
@@ -557,7 +578,7 @@ function ContactItem({
         {icon}
       </div>
       <div>
-        <div className="text-xs font-semibold uppercase tracking-wide" style={{ opacity: 0.5 }}>
+        <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#4b5563' }}>
           {label}
         </div>
         <div className="font-medium">{value}</div>
@@ -568,7 +589,7 @@ function ContactItem({
 
 function MapPinIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
       <circle cx="12" cy="10" r="3" />
     </svg>
@@ -577,7 +598,7 @@ function MapPinIcon() {
 
 function PhoneIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
   );
@@ -585,7 +606,7 @@ function PhoneIcon() {
 
 function MailIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
       <polyline points="22,6 12,13 2,6" />
     </svg>

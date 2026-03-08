@@ -70,16 +70,19 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
       <div className="w-12 h-[3px] mx-auto mb-8" style={{ backgroundColor: 'var(--accent-red)' }} />
 
       {/* Tabs */}
-      <div className="flex mb-6 border-b border-gray-200">
+      <div role="tablist" className="flex mb-6 border-b border-gray-200">
         {(['login', 'register'] as const).map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); setError(null); }}
+            aria-selected={tab === t}
+            aria-controls={`tab-panel-${t}`}
+            id={`tab-${t}`}
+            role="tab"
             className="flex-1 pb-3 text-sm font-semibold transition"
             style={{
               borderBottom: tab === t ? '2px solid var(--primary-blue)' : '2px solid transparent',
-              color: tab === t ? 'var(--primary-blue)' : undefined,
-              opacity: tab === t ? 1 : 0.45,
+              color: tab === t ? 'var(--primary-blue)' : '#6b7280',
               marginBottom: -1,
             }}
           >
@@ -89,12 +92,15 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
       </div>
 
       {tab === 'login' ? (
+        <div id="tab-panel-login" role="tabpanel" aria-labelledby="tab-login">
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold mb-1">E-post</label>
+            <label htmlFor="auth-login-email" className="block text-sm font-semibold mb-1">E-post</label>
             <input
+              id="auth-login-email"
               type="email"
               required
+              autoComplete="email"
               value={loginEmail}
               onChange={(e) => setLoginEmail(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 focus:outline-none"
@@ -104,9 +110,11 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Lösenord</label>
+            <label htmlFor="auth-login-pw" className="block text-sm font-semibold mb-1">Lösenord</label>
             <div className="relative">
               <input
+                id="auth-login-pw"
+                autoComplete="current-password"
                 type={showLoginPw ? 'text' : 'password'}
                 required
                 value={loginPassword}
@@ -118,14 +126,14 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
               <button
                 type="button"
                 onClick={() => setShowLoginPw((v) => !v)}
+                aria-label={showLoginPw ? 'Dölj lösenord' : 'Visa lösenord'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-                tabIndex={-1}
               >
                 <EyeIcon open={showLoginPw} />
               </button>
             </div>
           </div>
-          {error && <p className="text-sm" style={{ color: 'var(--accent-red)' }}>{error}</p>}
+          {error && <p role="alert" className="text-sm" style={{ color: 'var(--accent-red)' }}>{error}</p>}
           <button
             type="submit"
             disabled={loading}
@@ -135,13 +143,17 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
             {loading ? 'Loggar in…' : 'Logga in'}
           </button>
         </form>
+        </div>
       ) : (
+        <div id="tab-panel-register" role="tabpanel" aria-labelledby="tab-register">
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold mb-1">Företagsnamn</label>
+            <label htmlFor="auth-reg-name" className="block text-sm font-semibold mb-1">Företagsnamn</label>
             <input
+              id="auth-reg-name"
               type="text"
               required
+              autoComplete="organization"
               value={regName}
               onChange={(e) => setRegName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 focus:outline-none"
@@ -151,10 +163,12 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">E-post</label>
+            <label htmlFor="auth-reg-email" className="block text-sm font-semibold mb-1">E-post</label>
             <input
+              id="auth-reg-email"
               type="email"
               required
+              autoComplete="email"
               value={regEmail}
               onChange={(e) => setRegEmail(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 focus:outline-none"
@@ -163,9 +177,11 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Lösenord</label>
+            <label htmlFor="auth-reg-pw" className="block text-sm font-semibold mb-1">Lösenord</label>
             <div className="relative">
               <input
+                id="auth-reg-pw"
+                autoComplete="new-password"
                 type={showRegPw ? 'text' : 'password'}
                 required
                 minLength={6}
@@ -178,14 +194,14 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
               <button
                 type="button"
                 onClick={() => setShowRegPw((v) => !v)}
+                aria-label={showRegPw ? 'Dölj lösenord' : 'Visa lösenord'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-                tabIndex={-1}
               >
                 <EyeIcon open={showRegPw} />
               </button>
             </div>
           </div>
-          {error && <p className="text-sm" style={{ color: 'var(--accent-red)' }}>{error}</p>}
+          {error && <p role="alert" className="text-sm" style={{ color: 'var(--accent-red)' }}>{error}</p>}
           <button
             type="submit"
             disabled={loading}
@@ -195,6 +211,7 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
             {loading ? 'Skapar konto…' : 'Skapa konto'}
           </button>
         </form>
+        </div>
       )}
     </div>
   );
@@ -202,13 +219,13 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
   ) : (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
       <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
