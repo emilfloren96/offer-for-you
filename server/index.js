@@ -9,7 +9,7 @@ const PORT = 3001;
 const JWT_SECRET = process.env.JWT_SECRET ?? "changeme-dev-secret";
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: '*', allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(express.json());
 
 // Auth middleware
