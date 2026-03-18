@@ -15,6 +15,8 @@ const ModelViewer = lazy(() => import("./components/ModelViewer").then(m => ({ d
 const MaterialPanel = lazy(() => import("./components/MaterialPanel").then(m => ({ default: m.MaterialPanel })));
 const CompanyDashboard = lazy(() => import("./components/CompanyDashboard").then(m => ({ default: m.CompanyDashboard })));
 const QuickPost = lazy(() => import("./components/QuickPost").then(m => ({ default: m.QuickPost })));
+const HomeownerWizard = lazy(() => import("./components/HomeownerWizard").then(m => ({ default: m.HomeownerWizard })));
+const ProDirectory = lazy(() => import("./components/ProDirectory").then(m => ({ default: m.ProDirectory })));
 
 type View = "configurator" | "company" | "homeowner-wizard" | "pro-directory";
 
