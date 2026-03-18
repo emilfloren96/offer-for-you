@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { SERVICE_CATEGORIES, REGIONS, URGENCY_OPTIONS, MOCK_PROFESSIONALS } from '../data/marketplace';
 import { ProCard } from './ProCard';
 import type { Professional } from '../data/marketplace';
-import { BACKEND } from './OfferPanel';
+const BACKEND = 'http://localhost:3001';
 
 interface HomeownerWizardProps {
   onBack: () => void;
