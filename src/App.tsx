@@ -16,11 +16,13 @@ const MaterialPanel = lazy(() => import("./components/MaterialPanel").then(m => 
 const CompanyDashboard = lazy(() => import("./components/CompanyDashboard").then(m => ({ default: m.CompanyDashboard })));
 const QuickPost = lazy(() => import("./components/QuickPost").then(m => ({ default: m.QuickPost })));
 
-type View = "configurator" | "company";
+type View = "configurator" | "company" | "homeowner-wizard" | "pro-directory";
 
 function App() {
   // ── Routing ──────────────────────────────────────────────────────────────
   const [view, setView] = useState<View>("configurator");
+  const [proCategory, setProCategory] = useState('all');
+  const [proRegion, setProRegion] = useState('all');
 
   // ── Company auth ──────────────────────────────────────────────────────────
   const [companyToken, setCompanyToken] = useState<string | null>(
@@ -174,6 +176,31 @@ function App() {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error ?? "Kunde inte skicka offert");
     }
+  }
+
+  // ── Homeowner Wizard ─────────────────────────────────────────────────────
+  if (view === "homeowner-wizard") {
+    return (
+      <Suspense fallback={<div className="min-h-screen" style={{ backgroundColor: "var(--bg-white)" }} />}>
+        <HomeownerWizard
+          onBack={() => setView("configurator")}
+          onViewPros={(cat, reg) => { setProCategory(cat); setProRegion(reg); setView("pro-directory"); }}
+        />
+      </Suspense>
+    );
+  }
+
+  // ── Pro Directory ────────────────────────────────────────────────────────
+  if (view === "pro-directory") {
+    return (
+      <Suspense fallback={<div className="min-h-screen" style={{ backgroundColor: "var(--bg-white)" }} />}>
+        <ProDirectory
+          initialCategory={proCategory}
+          initialRegion={proRegion}
+          onBack={() => setView("configurator")}
+        />
+      </Suspense>
+    );
   }
 
   // ── Company dashboard (full-page) ─────────────────────────────────────────
@@ -354,11 +381,11 @@ function App() {
                   </p>
                   <div className="flex flex-col gap-2">
                     <button
-                      onClick={() => setQuickPostOpen(true)}
+                      onClick={() => setView("homeowner-wizard")}
                       className="w-full py-2 text-white text-sm font-semibold transition hover:opacity-90"
                       style={{ backgroundColor: "var(--primary-blue)", borderRadius: "var(--border-radius)" }}
                     >
-                      Snabbpost – beskriv jobbet
+                      Starta ett projekt →
                     </button>
                     <button
                       onClick={dismissLanding}
@@ -386,13 +413,22 @@ function App() {
                   <p className="text-xs mb-4" style={{ color: '#4b5563' }}>
                     Bläddra bland öppna jobb från husägare i din bransch och ta kontakt direkt.
                   </p>
-                  <button
-                    onClick={() => setView("company")}
-                    className="w-full py-2 text-white text-sm font-semibold transition hover:opacity-90"
-                    style={{ backgroundColor: "var(--accent-red)", borderRadius: "var(--border-radius)" }}
-                  >
-                    Hitta jobb →
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => { setProCategory("all"); setProRegion("all"); setView("pro-directory"); }}
+                      className="w-full py-2 text-white text-sm font-semibold transition hover:opacity-90"
+                      style={{ backgroundColor: "var(--accent-red)", borderRadius: "var(--border-radius)" }}
+                    >
+                      Bläddra bland proffs →
+                    </button>
+                    <button
+                      onClick={() => setView("company")}
+                      className="w-full py-2 text-sm font-semibold border transition hover:opacity-80"
+                      style={{ borderColor: "var(--accent-red)", color: "var(--accent-red)", borderRadius: "var(--border-radius)", backgroundColor: "transparent" }}
+                    >
+                      Logga in / Registrera →
+                    </button>
+                  </div>
                 </div>
               </div>
 
