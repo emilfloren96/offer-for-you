@@ -92,4 +92,22 @@ db.exec(`
   )
 `);
 
+// Create the CompanyProfiles table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS CompanyProfiles (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_id   INTEGER NOT NULL UNIQUE,
+    region       TEXT    NOT NULL DEFAULT '',
+    categories   TEXT    NOT NULL DEFAULT '[]',
+    bio          TEXT    NOT NULL DEFAULT '',
+    phone        TEXT    NOT NULL DEFAULT '',
+    score        INTEGER NOT NULL DEFAULT 0,
+    verified     INTEGER NOT NULL DEFAULT 0,
+    premium      INTEGER NOT NULL DEFAULT 0,
+    created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (company_id) REFERENCES Companies(id)
+  )
+`);
+
 export default db;

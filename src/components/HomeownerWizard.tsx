@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SERVICE_CATEGORIES, REGIONS, URGENCY_OPTIONS, MOCK_PROFESSIONALS } from '../data/marketplace';
+import { SERVICE_CATEGORIES, REGIONS, URGENCY_OPTIONS } from '../data/marketplace';
 import { ProCard } from './ProCard';
 import type { Professional } from '../data/marketplace';
 const BACKEND = 'http://localhost:3001';
@@ -71,20 +71,14 @@ export function HomeownerWizard({ onBack, onViewPros }: HomeownerWizardProps) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [matchedPros, setMatchedPros] = useState<Professional[]>([]);
+  const [prosLoading, setProsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [contactPro, setContactPro] = useState<Professional | null>(null);
 
   const selectedCat = SERVICE_CATEGORIES.find((c) => c.id === selectedCategory);
 
-  // Matched pros: same category, then same region, sorted by score desc
-  const matchedPros = MOCK_PROFESSIONALS
-    .filter((p) => selectedCategory && p.categories.includes(selectedCategory))
-    .filter((p) => !selectedRegion || p.region === selectedRegion)
-    .sort((a, b) => {
-      if (a.premium !== b.premium) return a.premium ? -1 : 1;
-      return b.score - a.score;
-    })
-    .slice(0, 3);
+  // matchedPros fetched from API on submit
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -107,6 +101,26 @@ export function HomeownerWizard({ onBack, onViewPros }: HomeownerWizardProps) {
         throw new Error(data.error ?? 'Kunde inte skicka förfrågan');
       }
       setStep(4);
+      // Fetch matching pros from real DB
+      setProsLoading(true);
+      const params = new URLSearchParams();
+      if (selectedCategory) params.set("category", selectedCategory);
+      if (selectedRegion) params.set("region", selectedRegion);
+      fetch(`${BACKEND}/api/professionals?${params}`)
+        .then(r => r.json())
+        .then((data) => {
+          const withDefaults = data.map((p: Professional, i: number) => ({
+            ...p,
+            initials: p.initials ?? p.company.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase(),
+            avatarColor: p.avatarColor ?? ["#004494","#c0392b","#27ae60","#8e44ad","#e67e22","#16a085"][i % 6],
+            rating: p.rating ?? 0, reviewCount: p.reviewCount ?? 0,
+            completedJobs: p.completedJobs ?? 0, responseTime: p.responseTime ?? "–",
+            name: p.name ?? p.company,
+          }));
+          setMatchedPros(withDefaults.slice(0, 3));
+        })
+        .catch(() => setMatchedPros([]))
+        .finally(() => setProsLoading(false));
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Okänt fel');
     } finally {

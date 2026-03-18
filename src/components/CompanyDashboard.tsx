@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CATEGORY_LABELS_SV, UNIT_LABEL } from '../data/materials';
+import { SERVICE_CATEGORIES, REGIONS } from '../data/marketplace';
 import { BACKEND } from './OfferPanel';
 
 interface OfferLineItem {
@@ -61,7 +62,7 @@ const JOB_CATEGORIES = [
   { value: 'other',      label: 'Övrigt' },
 ];
 
-type Tab = 'jobs' | 'offers';
+type Tab = 'jobs' | 'offers' | 'profile';
 
 export function CompanyDashboard({ token, companyName, onBack, onLogout }: CompanyDashboardProps) {
   const [tab, setTab] = useState<Tab>('jobs');
@@ -78,6 +79,16 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
   const [offersLoading, setOffersLoading] = useState(true);
   const [offersError, setOffersError] = useState<string | null>(null);
   const [expandedOfferId, setExpandedOfferId] = useState<number | null>(null);
+
+  // ── Profile state ────────────────────────────────────────────────────────
+  const [profileRegion, setProfileRegion] = useState('');
+  const [profileCategories, setProfileCategories] = useState<string[]>([]);
+  const [profileBio, setProfileBio] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   // Fetch jobs
   useEffect(() => {
@@ -109,6 +120,44 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
       .catch((err) => setOffersError(err.message))
       .finally(() => setOffersLoading(false));
   }, [token, tab]);
+
+  // Fetch own profile when profile tab is active
+  useEffect(() => {
+    if (tab !== 'profile') return;
+    setProfileLoading(true);
+    fetch(`${BACKEND}/api/professionals/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => {
+        if (data) {
+          setProfileRegion(data.region ?? '');
+          setProfileCategories(data.categories ?? []);
+          setProfileBio(data.bio ?? '');
+          setProfilePhone(data.phone ?? '');
+        }
+      })
+      .catch(() => {})
+      .finally(() => setProfileLoading(false));
+  }, [token, tab]);
+
+  async function handleSaveProfile() {
+    setProfileSaving(true);
+    setProfileError(null);
+    setProfileSaved(false);
+    try {
+      const res = await fetch(`${BACKEND}/api/professionals/profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ region: profileRegion, categories: profileCategories, bio: profileBio, phone: profilePhone }),
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error ?? 'Fel vid sparande'); }
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 3000);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Okänt fel');
+    } finally {
+      setProfileSaving(false);
+    }
+  }
 
   function timeAgo(dateStr: string) {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -175,6 +224,16 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                 {offers.length}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setTab('profile')}
+            className="px-5 py-3 text-sm font-semibold border-b-2 transition"
+            style={{
+              borderColor: tab === 'profile' ? 'var(--primary-blue)' : 'transparent',
+              color: tab === 'profile' ? 'var(--primary-blue)' : '#4b5563',
+            }}
+          >
+            Min profil
           </button>
         </div>
       </div>
@@ -396,6 +455,123 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── PROFILE TAB ── */}
+        {tab === 'profile' && (
+          <div style={{ maxWidth: 560 }}>
+            <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--primary-blue)' }}>
+              Din profil i katalogen
+            </h2>
+            <p className="text-sm mb-6" style={{ color: '#4b5563' }}>
+              Fyll i din profil för att synas i vår proffs-katalog. Husägare söker och filtrerar efter region och tjänst.
+            </p>
+
+            {profileLoading ? (
+              <p style={{ color: '#4b5563' }}>Laddar profil…</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+                {/* Region */}
+                <div>
+                  <label htmlFor="prof-region" style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-main)', marginBottom: 6 }}>
+                    Region <span style={{ color: 'var(--accent-red)' }}>*</span>
+                  </label>
+                  <select
+                    id="prof-region"
+                    value={profileRegion}
+                    onChange={e => setProfileRegion(e.target.value)}
+                    style={{ width: '100%', padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 'var(--border-radius)', fontSize: 14 }}
+                  >
+                    <option value="">Välj region…</option>
+                    {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+
+                {/* Categories */}
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-main)', marginBottom: 8 }}>Tjänster du erbjuder</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {SERVICE_CATEGORIES.map(cat => {
+                      const active = profileCategories.includes(cat.id);
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setProfileCategories(prev =>
+                            active ? prev.filter(c => c !== cat.id) : [...prev, cat.id]
+                          )}
+                          style={{
+                            padding: '6px 14px',
+                            borderRadius: 99,
+                            border: active ? '2px solid var(--primary-blue)' : '1px solid #e5e7eb',
+                            backgroundColor: active ? '#e8f0fb' : '#fff',
+                            color: active ? 'var(--primary-blue)' : 'var(--text-main)',
+                            fontWeight: active ? 700 : 400,
+                            fontSize: 13,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {cat.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <label htmlFor="prof-bio" style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-main)', marginBottom: 6 }}>
+                    Om företaget <span style={{ color: 'var(--accent-red)' }}>*</span>
+                  </label>
+                  <textarea
+                    id="prof-bio"
+                    rows={4}
+                    value={profileBio}
+                    onChange={e => setProfileBio(e.target.value)}
+                    placeholder="Berätta kort om ditt företag, erfarenhet och vad ni specialiserar er på…"
+                    style={{ width: '100%', padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 'var(--border-radius)', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label htmlFor="prof-phone" style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-main)', marginBottom: 6 }}>
+                    Telefon
+                  </label>
+                  <input
+                    id="prof-phone"
+                    type="tel"
+                    value={profilePhone}
+                    onChange={e => setProfilePhone(e.target.value)}
+                    placeholder="070-123 45 67"
+                    style={{ width: '100%', padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 'var(--border-radius)', fontSize: 14, boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                {profileError && <p role="alert" style={{ color: 'var(--accent-red)', fontSize: 13 }}>{profileError}</p>}
+                {profileSaved && <p style={{ color: '#16a34a', fontSize: 13, fontWeight: 600 }}>Profil sparad! Du syns nu i katalogen.</p>}
+
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={!profileRegion || !profileBio || profileSaving}
+                  style={{
+                    padding: '11px 0',
+                    backgroundColor: 'var(--primary-blue)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius)',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    cursor: profileRegion && profileBio && !profileSaving ? 'pointer' : 'not-allowed',
+                    opacity: profileRegion && profileBio && !profileSaving ? 1 : 0.5,
+                  }}
+                >
+                  {profileSaving ? 'Sparar…' : 'Spara profil'}
+                </button>
               </div>
             )}
           </div>

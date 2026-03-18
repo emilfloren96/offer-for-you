@@ -261,6 +261,86 @@ app.get("/api/job-requests", requireAuth, (req, res) => {
   res.json(jobs);
 });
 
+// ------------------------------------
+// GET /api/professionals — Public directory of companies with profiles
+// ------------------------------------
+app.get("/api/professionals", (req, res) => {
+  const { category, region } = req.query;
+
+  let rows = db.prepare(`
+    SELECT
+      c.id,
+      c.company_name,
+      p.region,
+      p.categories,
+      p.bio,
+      p.phone,
+      c.email,
+      p.score,
+      p.verified,
+      p.premium
+    FROM Companies c
+    JOIN CompanyProfiles p ON p.company_id = c.id
+    WHERE p.region != '' AND p.bio != ''
+    ORDER BY p.premium DESC, p.score DESC
+  `).all();
+
+  // Parse categories JSON and filter
+  rows = rows.map(r => ({ ...r, categories: JSON.parse(r.categories || '[]') }));
+
+  if (category && category !== 'all') {
+    rows = rows.filter(r => r.categories.includes(category));
+  }
+  if (region && region !== 'all') {
+    rows = rows.filter(r => r.region === region);
+  }
+
+  res.json(rows);
+});
+
+// ------------------------------------
+// GET /api/professionals/me — Get own profile (auth required)
+// ------------------------------------
+app.get("/api/professionals/me", requireAuth, (req, res) => {
+  const profile = db.prepare(
+    "SELECT * FROM CompanyProfiles WHERE company_id = ?"
+  ).get(req.company.id);
+
+  if (!profile) return res.json(null);
+  res.json({ ...profile, categories: JSON.parse(profile.categories || '[]') });
+});
+
+// ------------------------------------
+// POST /api/professionals/profile — Create or update own profile (auth required)
+// ------------------------------------
+app.post("/api/professionals/profile", requireAuth, (req, res) => {
+  const { region, categories, bio, phone } = req.body;
+
+  if (!region || !bio) {
+    return res.status(400).json({ error: "region och bio krävs." });
+  }
+
+  const categoriesJson = JSON.stringify(Array.isArray(categories) ? categories : []);
+  const existing = db.prepare(
+    "SELECT id FROM CompanyProfiles WHERE company_id = ?"
+  ).get(req.company.id);
+
+  if (existing) {
+    db.prepare(`
+      UPDATE CompanyProfiles
+      SET region = ?, categories = ?, bio = ?, phone = ?, updated_at = datetime('now')
+      WHERE company_id = ?
+    `).run(region, categoriesJson, bio, phone ?? '', req.company.id);
+  } else {
+    db.prepare(`
+      INSERT INTO CompanyProfiles (company_id, region, categories, bio, phone)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(req.company.id, region, categoriesJson, bio, phone ?? '');
+  }
+
+  res.json({ ok: true });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
