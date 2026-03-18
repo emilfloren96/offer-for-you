@@ -270,7 +270,7 @@ app.get("/api/professionals", (req, res) => {
   let rows = db.prepare(`
     SELECT
       c.id,
-      c.company_name,
+      c.company_name AS company,
       p.region,
       p.categories,
       p.bio,
