@@ -501,7 +501,9 @@ export function HomeownerWizard({ onBack, onViewPros }: HomeownerWizardProps) {
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
               <h1 id="step4-heading" style={{ fontSize: 22, fontWeight: 800, color: 'var(--primary-blue)', margin: 0 }}>
-                {matchedPros.length > 0
+                {prosLoading
+                  ? 'Söker matchande proffs…'
+                  : matchedPros.length > 0
                   ? `${matchedPros.length} proffs matchar ditt projekt`
                   : 'Inga matchande proffs hittades'}
               </h1>
