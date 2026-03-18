@@ -97,9 +97,9 @@ export function HomeownerWizard({ onBack, onViewPros }: HomeownerWizardProps) {
           title: title || `${selectedCat?.label ?? 'Projekt'} i ${selectedRegion}`,
           description,
           category: selectedCategory,
-          contact_name: name,
-          contact_email: email,
-          contact_phone: phone,
+          contactName: name,
+          contactEmail: email,
+          contactPhone: phone,
         }),
       });
       if (!res.ok) {
