@@ -251,11 +251,11 @@ app.get("/api/job-requests", requireAuth, (req, res) => {
   const companyId = req.company.id;
 
   let where = "jr.status = 'open'";
-  const params = [companyId];
+  const whereParams = [];
 
   if (category && category !== "all") {
     where += " AND jr.category = ?";
-    params.push(category);
+    whereParams.push(category);
   }
 
   const jobs = db.prepare(`
@@ -268,7 +268,7 @@ app.get("/api/job-requests", requireAuth, (req, res) => {
     WHERE ${where}
     GROUP BY jr.id
     ORDER BY jr.created_at DESC
-  `).all(companyId, ...params);
+  `).all(companyId, ...whereParams);
 
   res.json(jobs);
 });
