@@ -42,6 +42,10 @@ function App() {
       if (state?.category) setProCategory(state.category);
       if (state?.region) setProRegion(state.region);
       setView(v);
+      if (v === 'configurator') {
+        setLandingMounted(true);
+        setLandingVisible(true);
+      }
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -80,6 +84,7 @@ function App() {
   };
 
   const dismissLanding = () => {
+    window.history.pushState({ view: 'configurator' }, '');
     setLandingVisible(false);
     setTimeout(() => setLandingMounted(false), 500);
   };
