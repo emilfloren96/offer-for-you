@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, useRef, useCallback, lazy, Suspense, useEffect } from "react";
 import { Header } from "./components/Header";
 import { CostSummary } from "./components/CostSummary";
 import { OfferPanel, BACKEND } from "./components/OfferPanel";
@@ -25,6 +25,27 @@ function App() {
   const [view, setView] = useState<View>("configurator");
   const [proCategory, setProCategory] = useState('all');
   const [proRegion, setProRegion] = useState('all');
+
+  function navigate(newView: View, opts?: { category?: string; region?: string }) {
+    if (opts?.category) setProCategory(opts.category);
+    if (opts?.region) setProRegion(opts.region);
+    setView(newView);
+    window.history.pushState({ view: newView, ...opts }, '');
+  }
+
+  useEffect(() => {
+    // Set initial history state so back works from very first navigation
+    window.history.replaceState({ view: 'configurator' }, '');
+    const onPop = (e: PopStateEvent) => {
+      const state = e.state as { view?: View; category?: string; region?: string } | null;
+      const v = state?.view ?? 'configurator';
+      if (state?.category) setProCategory(state.category);
+      if (state?.region) setProRegion(state.region);
+      setView(v);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // ── Company auth ──────────────────────────────────────────────────────────
   const [companyToken, setCompanyToken] = useState<string | null>(
@@ -185,8 +206,8 @@ function App() {
     return (
       <Suspense fallback={<div className="min-h-screen" style={{ backgroundColor: "var(--bg-white)" }} />}>
         <HomeownerWizard
-          onBack={() => setView("configurator")}
-          onViewPros={(cat, reg) => { setProCategory(cat); setProRegion(reg); setView("pro-directory"); }}
+          onBack={() => navigate("configurator")}
+          onViewPros={(cat, reg) => navigate("pro-directory", { category: cat, region: reg })}
         />
       </Suspense>
     );
@@ -199,7 +220,7 @@ function App() {
         <ProDirectory
           initialCategory={proCategory}
           initialRegion={proRegion}
-          onBack={() => setView("configurator")}
+          onBack={() => navigate("configurator")}
         />
       </Suspense>
     );
@@ -213,7 +234,7 @@ function App() {
           <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
               <button
-                onClick={() => setView("configurator")}
+                onClick={() => navigate("configurator")}
                 className="text-sm font-medium hover:opacity-70 transition"
                 style={{ color: "var(--primary-blue)" }}
               >
@@ -233,7 +254,7 @@ function App() {
       <CompanyDashboard
         token={companyToken}
         companyName={companyName}
-        onBack={() => setView("configurator")}
+        onBack={() => navigate("configurator")}
         onLogout={handleCompanyLogout}
       />
       </Suspense>
@@ -261,7 +282,7 @@ function App() {
       </a>
       <Header
         onCreateOffer={landingMounted ? dismissLanding : scrollToOffer}
-        onCompany={() => setView("company")}
+        onCompany={() => navigate("company")}
       />
 
       {/* ── Cart Modal ── */}
@@ -383,7 +404,7 @@ function App() {
                   </p>
                   <div className="flex flex-col gap-2">
                     <button
-                      onClick={() => setView("homeowner-wizard")}
+                      onClick={() => navigate("homeowner-wizard")}
                       className="w-full py-2 text-white text-sm font-semibold transition hover:opacity-90"
                       style={{ backgroundColor: "var(--primary-blue)", borderRadius: "var(--border-radius)" }}
                     >
@@ -417,14 +438,14 @@ function App() {
                   </p>
                   <div className="flex flex-col gap-2">
                     <button
-                      onClick={() => { setProCategory("all"); setProRegion("all"); setView("pro-directory"); }}
+                      onClick={() => navigate("pro-directory", { category: "all", region: "all" })}
                       className="w-full py-2 text-white text-sm font-semibold transition hover:opacity-90"
                       style={{ backgroundColor: "var(--accent-red)", borderRadius: "var(--border-radius)" }}
                     >
                       Bläddra bland proffs →
                     </button>
                     <button
-                      onClick={() => setView("company")}
+                      onClick={() => navigate("company")}
                       className="w-full py-2 text-sm font-semibold border transition hover:opacity-80"
                       style={{ borderColor: "var(--accent-red)", color: "var(--accent-red)", borderRadius: "var(--border-radius)", backgroundColor: "transparent" }}
                     >
