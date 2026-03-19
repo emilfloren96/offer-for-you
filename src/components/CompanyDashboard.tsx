@@ -36,6 +36,8 @@ interface JobRequest {
   contact_email: string;
   contact_phone: string;
   status: string;
+  interest_count: number;
+  my_interest: number; // 1 = already expressed interest, 0 = not yet
 }
 
 interface CompanyDashboardProps {
@@ -73,6 +75,8 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
   const [jobsError, setJobsError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [expandedJobId, setExpandedJobId] = useState<number | null>(null);
+
+  const [interestingJobId, setInterestingJobId] = useState<number | null>(null);
 
   // ── Offers state ─────────────────────────────────────────────────────────
   const [offers, setOffers] = useState<OfferRecord[]>([]);
@@ -156,6 +160,25 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
       setProfileError(err instanceof Error ? err.message : 'Okänt fel');
     } finally {
       setProfileSaving(false);
+    }
+  }
+
+  async function handleExpressInterest(jobId: number) {
+    setInterestingJobId(jobId);
+    try {
+      const res = await fetch(`${BACKEND}/api/job-requests/${jobId}/interest`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setJobs(prev => prev.map(j =>
+        j.id === jobId ? { ...j, my_interest: 1, interest_count: data.interest_count } : j
+      ));
+    } catch {
+      // silently ignore — state stays as-is
+    } finally {
+      setInterestingJobId(null);
     }
   }
 
@@ -298,6 +321,11 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="text-sm font-medium" style={{ color: "#4b5563" }}>{job.contact_name}</span>
+                          {job.interest_count > 0 && (
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
+                              {job.interest_count} intresserade
+                            </span>
+                          )}
                           <span aria-hidden="true" style={{ color: "#9ca3af" }}>{isOpen ? "▲" : "▼"}</span>
                         </div>
                       </button>
@@ -337,11 +365,26 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                               </div>
                             )}
                           </div>
-                          <div className="mt-4">
+                          <div className="mt-4 flex flex-wrap gap-3">
+                            <button
+                              onClick={() => handleExpressInterest(job.id)}
+                              disabled={!!job.my_interest || interestingJobId === job.id}
+                              className="px-5 py-2 text-sm font-semibold transition"
+                              style={{
+                                backgroundColor: job.my_interest ? '#f0fdf4' : 'var(--primary-blue)',
+                                color: job.my_interest ? '#16a34a' : '#fff',
+                                border: job.my_interest ? '1px solid #bbf7d0' : 'none',
+                                borderRadius: 'var(--border-radius)',
+                                cursor: job.my_interest || interestingJobId === job.id ? 'default' : 'pointer',
+                                opacity: interestingJobId === job.id ? 0.6 : 1,
+                              }}
+                            >
+                              {job.my_interest ? '✓ Intresse anmält' : interestingJobId === job.id ? 'Skickar…' : 'Anmäl intresse'}
+                            </button>
                             <a
                               href={`mailto:${job.contact_email}?subject=Svar på din jobbförfrågan: ${encodeURIComponent(job.title)}`}
-                              className="inline-block px-5 py-2 text-white text-sm font-semibold transition hover:opacity-90"
-                              style={{ backgroundColor: 'var(--primary-blue)', borderRadius: 'var(--border-radius)' }}
+                              className="inline-block px-5 py-2 text-sm font-semibold transition hover:opacity-90"
+                              style={{ backgroundColor: '#f3f4f6', color: 'var(--text-main)', borderRadius: 'var(--border-radius)' }}
                             >
                               Kontakta kunden →
                             </a>

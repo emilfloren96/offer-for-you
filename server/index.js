@@ -248,17 +248,50 @@ app.post("/api/job-requests", (req, res) => {
 // ------------------------------------
 app.get("/api/job-requests", requireAuth, (req, res) => {
   const { category } = req.query;
+  const companyId = req.company.id;
 
-  let query = "SELECT * FROM JobRequests WHERE status = 'open' ORDER BY created_at DESC";
-  const params = [];
+  let where = "jr.status = 'open'";
+  const params = [companyId];
 
   if (category && category !== "all") {
-    query = "SELECT * FROM JobRequests WHERE status = 'open' AND category = ? ORDER BY created_at DESC";
+    where += " AND jr.category = ?";
     params.push(category);
   }
 
-  const jobs = db.prepare(query).all(...params);
+  const jobs = db.prepare(`
+    SELECT
+      jr.*,
+      COUNT(ji.id) AS interest_count,
+      MAX(CASE WHEN ji.company_id = ? THEN 1 ELSE 0 END) AS my_interest
+    FROM JobRequests jr
+    LEFT JOIN JobInterests ji ON ji.job_request_id = jr.id
+    WHERE ${where}
+    GROUP BY jr.id
+    ORDER BY jr.created_at DESC
+  `).all(companyId, ...params);
+
   res.json(jobs);
+});
+
+// ------------------------------------
+// POST /api/job-requests/:id/interest — Express interest in a job (companies only)
+// ------------------------------------
+app.post("/api/job-requests/:id/interest", requireAuth, (req, res) => {
+  const jobId = parseInt(req.params.id, 10);
+  if (!Number.isInteger(jobId)) return res.status(400).json({ error: "Invalid job id" });
+
+  const job = db.prepare("SELECT * FROM JobRequests WHERE id = ? AND status = 'open'").get(jobId);
+  if (!job) return res.status(404).json({ error: "Jobbförfrågan hittades inte eller är inte öppen." });
+
+  db.prepare(
+    "INSERT OR IGNORE INTO JobInterests (job_request_id, company_id) VALUES (?, ?)"
+  ).run(jobId, req.company.id);
+
+  const { interest_count } = db.prepare(
+    "SELECT COUNT(*) AS interest_count FROM JobInterests WHERE job_request_id = ?"
+  ).get(jobId);
+
+  res.json({ ok: true, interest_count });
 });
 
 // ------------------------------------

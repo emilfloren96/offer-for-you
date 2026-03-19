@@ -110,4 +110,17 @@ db.exec(`
   )
 `);
 
+// Create the JobInterests table (pros express interest in a job request)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS JobInterests (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_request_id  INTEGER NOT NULL,
+    company_id      INTEGER NOT NULL,
+    created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(job_request_id, company_id),
+    FOREIGN KEY (job_request_id) REFERENCES JobRequests(id),
+    FOREIGN KEY (company_id)     REFERENCES Companies(id)
+  )
+`);
+
 export default db;
