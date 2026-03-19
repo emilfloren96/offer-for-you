@@ -110,6 +110,19 @@ db.exec(`
   )
 `);
 
+// Create the OfferInterests table (pros express interest in a submitted offer)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS OfferInterests (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    offer_id    INTEGER NOT NULL,
+    company_id  INTEGER NOT NULL,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(offer_id, company_id),
+    FOREIGN KEY (offer_id)    REFERENCES Offers(id),
+    FOREIGN KEY (company_id)  REFERENCES Companies(id)
+  )
+`);
+
 // Create the JobInterests table (pros express interest in a job request)
 db.exec(`
   CREATE TABLE IF NOT EXISTS JobInterests (

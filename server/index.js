@@ -212,10 +212,39 @@ app.post("/api/offers", (req, res) => {
 // GET /api/offers — Fetch all offers (company dashboard)
 // ------------------------------------
 app.get("/api/offers", requireAuth, (req, res) => {
-  const offers = db
-    .prepare("SELECT * FROM Offers ORDER BY created_at DESC")
-    .all();
+  const companyId = req.company.id;
+  const offers = db.prepare(`
+    SELECT
+      o.*,
+      COUNT(oi.id) AS interest_count,
+      MAX(CASE WHEN oi.company_id = ? THEN 1 ELSE 0 END) AS my_interest
+    FROM Offers o
+    LEFT JOIN OfferInterests oi ON oi.offer_id = o.id
+    GROUP BY o.id
+    ORDER BY o.created_at DESC
+  `).all(companyId);
   res.json(offers);
+});
+
+// ------------------------------------
+// POST /api/offers/:id/interest — Express interest in an offer (companies only)
+// ------------------------------------
+app.post("/api/offers/:id/interest", requireAuth, (req, res) => {
+  const offerId = parseInt(req.params.id, 10);
+  if (!Number.isInteger(offerId)) return res.status(400).json({ error: "Invalid offer id" });
+
+  const offer = db.prepare("SELECT id FROM Offers WHERE id = ?").get(offerId);
+  if (!offer) return res.status(404).json({ error: "Offert hittades inte." });
+
+  db.prepare(
+    "INSERT OR IGNORE INTO OfferInterests (offer_id, company_id) VALUES (?, ?)"
+  ).run(offerId, req.company.id);
+
+  const { interest_count } = db.prepare(
+    "SELECT COUNT(*) AS interest_count FROM OfferInterests WHERE offer_id = ?"
+  ).get(offerId);
+
+  res.json({ ok: true, interest_count });
 });
 
 // ------------------------------------

@@ -24,6 +24,8 @@ interface OfferRecord {
   floors: number;
   total_price: number;
   items_json: string;
+  interest_count: number;
+  my_interest: number;
 }
 
 interface JobRequest {
@@ -77,6 +79,7 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
   const [expandedJobId, setExpandedJobId] = useState<number | null>(null);
 
   const [interestingJobId, setInterestingJobId] = useState<number | null>(null);
+  const [interestingOfferId, setInterestingOfferId] = useState<number | null>(null);
 
   // ── Offers state ─────────────────────────────────────────────────────────
   const [offers, setOffers] = useState<OfferRecord[]>([]);
@@ -160,6 +163,25 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
       setProfileError(err instanceof Error ? err.message : 'Okänt fel');
     } finally {
       setProfileSaving(false);
+    }
+  }
+
+  async function handleOfferInterest(offerId: number) {
+    setInterestingOfferId(offerId);
+    try {
+      const res = await fetch(`${BACKEND}/api/offers/${offerId}/interest`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setOffers(prev => prev.map(o =>
+        o.id === offerId ? { ...o, my_interest: 1, interest_count: data.interest_count } : o
+      ));
+    } catch {
+      // silently ignore
+    } finally {
+      setInterestingOfferId(null);
     }
   }
 
@@ -444,6 +466,11 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                           <span className="font-extrabold" style={{ color: 'var(--primary-blue)' }}>
                             {offer.total_price.toLocaleString('sv-SE')} kr
                           </span>
+                          {offer.interest_count > 0 && (
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
+                              {offer.interest_count} intresserade
+                            </span>
+                          )}
                           <span aria-hidden="true" style={{ color: "#9ca3af" }}>{isOpen ? "▲" : "▼"}</span>
                         </div>
                       </button>
@@ -463,6 +490,31 @@ export function CompanyDashboard({ token, companyName, onBack, onLogout }: Compa
                                 <div>{offer.message}</div>
                               </div>
                             )}
+                          </div>
+
+                          <div className="mb-4 flex flex-wrap gap-3">
+                            <button
+                              onClick={() => handleOfferInterest(offer.id)}
+                              disabled={!!offer.my_interest || interestingOfferId === offer.id}
+                              className="px-5 py-2 text-sm font-semibold transition"
+                              style={{
+                                backgroundColor: offer.my_interest ? '#f0fdf4' : 'var(--primary-blue)',
+                                color: offer.my_interest ? '#16a34a' : '#fff',
+                                border: offer.my_interest ? '1px solid #bbf7d0' : 'none',
+                                borderRadius: 'var(--border-radius)',
+                                cursor: offer.my_interest || interestingOfferId === offer.id ? 'default' : 'pointer',
+                                opacity: interestingOfferId === offer.id ? 0.6 : 1,
+                              }}
+                            >
+                              {offer.my_interest ? '✓ Intresse anmält' : interestingOfferId === offer.id ? 'Skickar…' : 'Anmäl intresse'}
+                            </button>
+                            <a
+                              href={`mailto:${offer.customer_email}?subject=Svar på din offertförfrågan`}
+                              className="inline-block px-5 py-2 text-sm font-semibold transition hover:opacity-90"
+                              style={{ backgroundColor: '#f3f4f6', color: 'var(--text-main)', borderRadius: 'var(--border-radius)' }}
+                            >
+                              Kontakta kunden →
+                            </a>
                           </div>
 
                           <table className="w-full text-sm">
