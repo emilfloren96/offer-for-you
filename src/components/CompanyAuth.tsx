@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { BACKEND } from './OfferPanel';
 
 interface CompanyAuthProps {
@@ -6,6 +6,17 @@ interface CompanyAuthProps {
 }
 
 export function CompanyAuth({ onAuth }: CompanyAuthProps) {
+  const id = useId();
+  const loginEmailId = `${id}-login-email`;
+  const loginPwId = `${id}-login-pw`;
+  const regNameId = `${id}-reg-name`;
+  const regEmailId = `${id}-reg-email`;
+  const regPwId = `${id}-reg-pw`;
+  const tabLoginId = `${id}-tab-login`;
+  const tabRegisterId = `${id}-tab-register`;
+  const panelLoginId = `${id}-panel-login`;
+  const panelRegisterId = `${id}-panel-register`;
+
   const [tab, setTab] = useState<'login' | 'register'>('login');
 
   // Login state
@@ -76,8 +87,8 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
             key={t}
             onClick={() => { setTab(t); setError(null); }}
             aria-selected={tab === t}
-            aria-controls={`tab-panel-${t}`}
-            id={`tab-${t}`}
+            aria-controls={t === 'login' ? panelLoginId : panelRegisterId}
+            id={t === 'login' ? tabLoginId : tabRegisterId}
             role="tab"
             className="flex-1 pb-3 text-sm font-semibold transition"
             style={{
@@ -92,12 +103,12 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
       </div>
 
       {tab === 'login' ? (
-        <div id="tab-panel-login" role="tabpanel" aria-labelledby="tab-login">
+        <div id={panelLoginId} role="tabpanel" aria-labelledby={tabLoginId}>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="auth-login-email" className="block text-sm font-semibold mb-1">E-post</label>
+            <label htmlFor={loginEmailId} className="block text-sm font-semibold mb-1">E-post</label>
             <input
-              id="auth-login-email"
+              id={loginEmailId}
               type="email"
               required
               autoComplete="email"
@@ -110,10 +121,10 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
             />
           </div>
           <div>
-            <label htmlFor="auth-login-pw" className="block text-sm font-semibold mb-1">Lösenord</label>
+            <label htmlFor={loginPwId} className="block text-sm font-semibold mb-1">Lösenord</label>
             <div className="relative">
               <input
-                id="auth-login-pw"
+                id={loginPwId}
                 autoComplete="current-password"
                 type={showLoginPw ? 'text' : 'password'}
                 required
@@ -145,12 +156,12 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
         </form>
         </div>
       ) : (
-        <div id="tab-panel-register" role="tabpanel" aria-labelledby="tab-register">
+        <div id={panelRegisterId} role="tabpanel" aria-labelledby={tabRegisterId}>
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label htmlFor="auth-reg-name" className="block text-sm font-semibold mb-1">Företagsnamn</label>
+            <label htmlFor={regNameId} className="block text-sm font-semibold mb-1">Företagsnamn</label>
             <input
-              id="auth-reg-name"
+              id={regNameId}
               type="text"
               required
               autoComplete="organization"
@@ -163,9 +174,9 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
             />
           </div>
           <div>
-            <label htmlFor="auth-reg-email" className="block text-sm font-semibold mb-1">E-post</label>
+            <label htmlFor={regEmailId} className="block text-sm font-semibold mb-1">E-post</label>
             <input
-              id="auth-reg-email"
+              id={regEmailId}
               type="email"
               required
               autoComplete="email"
@@ -177,10 +188,10 @@ export function CompanyAuth({ onAuth }: CompanyAuthProps) {
             />
           </div>
           <div>
-            <label htmlFor="auth-reg-pw" className="block text-sm font-semibold mb-1">Lösenord</label>
+            <label htmlFor={regPwId} className="block text-sm font-semibold mb-1">Lösenord</label>
             <div className="relative">
               <input
-                id="auth-reg-pw"
+                id={regPwId}
                 autoComplete="new-password"
                 type={showRegPw ? 'text' : 'password'}
                 required

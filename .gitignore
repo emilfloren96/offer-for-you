@@ -12,7 +12,12 @@ dist
 dist-ssr
 *.local
 
-# SQLite WAL files
+# Environment variables
+.env
+server/.env
+
+# SQLite WAL files (legacy)
+*.db
 *.db-shm
 *.db-wal
 

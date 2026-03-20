@@ -1,139 +1,109 @@
-import Database from "better-sqlite3";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import mongoose from 'mongoose';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = join(__dirname, "products.db");
+const MONGODB_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/offer-for-you';
 
-const db = new Database(dbPath);
+export const connectDB = async () => {
+  await mongoose.connect(MONGODB_URI);
+  console.log('MongoDB connected');
+};
 
-// Enable WAL mode for better performance
-db.pragma("journal_mode = WAL");
+// ─── Product ───────────────────────────────────────────────────────────────
+const productSchema = new mongoose.Schema({
+  name:        { type: String, required: true },
+  category:    { type: String, required: true },
+  unit:        { type: String, required: true },
+  costPrice:   { type: Number, required: true },
+  salePrice:   { type: Number, required: true },
+  lastUpdated: { type: Date, default: Date.now },
+});
 
-// Create the Products table
-db.exec(`
-  CREATE TABLE IF NOT EXISTS Products (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    name         TEXT    NOT NULL,
-    category     TEXT    NOT NULL,
-    unit         TEXT    NOT NULL,
-    cost_price   REAL    NOT NULL,
-    sale_price   REAL    NOT NULL,
-    last_updated TEXT    NOT NULL DEFAULT (datetime('now'))
-  )
-`);
+export const Product = mongoose.model('Product', productSchema);
 
-// Seed data — only insert if the table is empty
-const count = db.prepare("SELECT COUNT(*) AS n FROM Products").get();
+export const seedProducts = async () => {
+  const count = await Product.countDocuments();
+  if (count === 0) {
+    await Product.insertMany([
+      { name: 'Konstruktionsvirke 45x195mm', category: 'Virke',        unit: 'm',           costPrice: 45,   salePrice: 89   },
+      { name: 'Skruv 4.2x55mm (200-pack)',   category: 'Fästelement',  unit: 'förpackning', costPrice: 85,   salePrice: 159  },
+      { name: 'Mineralull 195mm',            category: 'Isolering',    unit: 'm²',          costPrice: 95,   salePrice: 179  },
+      { name: 'Gipsskiva 13mm',              category: 'Skivor',       unit: 'st',          costPrice: 65,   salePrice: 119  },
+      { name: 'Betong C25/30',               category: 'Betong',       unit: 'm³',          costPrice: 950,  salePrice: 1650 },
+    ]);
+    console.log('Database seeded with 5 products.');
+  }
+};
 
-if (count.n === 0) {
-  const insert = db.prepare(`
-    INSERT INTO Products (name, category, unit, cost_price, sale_price)
-    VALUES (?, ?, ?, ?, ?)
-  `);
+// ─── Company ───────────────────────────────────────────────────────────────
+const companySchema = new mongoose.Schema({
+  companyName:  { type: String, required: true },
+  email:        { type: String, required: true, unique: true },
+  passwordHash: { type: String, required: true },
+  createdAt:    { type: Date, default: Date.now },
+});
 
-  const products = [
-    ["Konstruktionsvirke 45x195mm", "Virke", "m", 45, 89],
-    ["Skruv 4.2x55mm (200-pack)", "Fästelement", "förpackning", 85, 159],
-    ["Mineralull 195mm", "Isolering", "m²", 95, 179],
-    ["Gipsskiva 13mm", "Skivor", "st", 65, 119],
-    ["Betong C25/30", "Betong", "m³", 950, 1650],
-  ];
+export const Company = mongoose.model('Company', companySchema);
 
-  const insertMany = db.transaction((items) => {
-    for (const item of items) {
-      insert.run(...item);
-    }
-  });
+// ─── CompanyProfile ────────────────────────────────────────────────────────
+const companyProfileSchema = new mongoose.Schema({
+  companyId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true, unique: true },
+  region:     { type: String, default: '' },
+  categories: { type: [String], default: [] },
+  bio:        { type: String, default: '' },
+  phone:      { type: String, default: '' },
+  score:      { type: Number, default: 0 },
+  verified:   { type: Boolean, default: false },
+  premium:    { type: Boolean, default: false },
+});
 
-  insertMany(products);
-  console.log("Database seeded with 5 products.");
-}
+export const CompanyProfile = mongoose.model('CompanyProfile', companyProfileSchema);
 
-// Create the Offers table
-db.exec(`
-  CREATE TABLE IF NOT EXISTS Offers (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
-    customer_name  TEXT    NOT NULL,
-    customer_email TEXT    NOT NULL,
-    customer_phone TEXT    NOT NULL DEFAULT '',
-    message        TEXT    NOT NULL DEFAULT '',
-    shape          TEXT    NOT NULL,
-    floors         INTEGER NOT NULL,
-    total_price    REAL    NOT NULL,
-    items_json     TEXT    NOT NULL
-  )
-`);
+// ─── Offer ─────────────────────────────────────────────────────────────────
+const offerSchema = new mongoose.Schema({
+  customerName:  { type: String, required: true },
+  customerEmail: { type: String, required: true },
+  customerPhone: { type: String, default: '' },
+  message:       { type: String, default: '' },
+  shape:         { type: String, required: true },
+  floors:        { type: Number, required: true },
+  totalPrice:    { type: Number, required: true },
+  itemsJson:     { type: String, required: true },
+  createdAt:     { type: Date, default: Date.now },
+});
 
-// Create the Companies table
-db.exec(`
-  CREATE TABLE IF NOT EXISTS Companies (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
-    company_name  TEXT    NOT NULL,
-    email         TEXT    NOT NULL UNIQUE,
-    password_hash TEXT    NOT NULL
-  )
-`);
+export const Offer = mongoose.model('Offer', offerSchema);
 
-// Create the JobRequests table (Quick Post / Open Leads)
-db.exec(`
-  CREATE TABLE IF NOT EXISTS JobRequests (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
-    title          TEXT    NOT NULL,
-    description    TEXT    NOT NULL DEFAULT '',
-    category       TEXT    NOT NULL DEFAULT 'other',
-    contact_name   TEXT    NOT NULL,
-    contact_email  TEXT    NOT NULL,
-    contact_phone  TEXT    NOT NULL DEFAULT '',
-    status         TEXT    NOT NULL DEFAULT 'open'
-  )
-`);
+// ─── JobRequest ────────────────────────────────────────────────────────────
+const jobRequestSchema = new mongoose.Schema({
+  title:        { type: String, required: true },
+  description:  { type: String, default: '' },
+  category:     { type: String, default: 'other' },
+  contactName:  { type: String, required: true },
+  contactEmail: { type: String, required: true },
+  contactPhone: { type: String, default: '' },
+  status:       { type: String, default: 'open' },
+  createdAt:    { type: Date, default: Date.now },
+});
 
-// Create the CompanyProfiles table
-db.exec(`
-  CREATE TABLE IF NOT EXISTS CompanyProfiles (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id   INTEGER NOT NULL UNIQUE,
-    region       TEXT    NOT NULL DEFAULT '',
-    categories   TEXT    NOT NULL DEFAULT '[]',
-    bio          TEXT    NOT NULL DEFAULT '',
-    phone        TEXT    NOT NULL DEFAULT '',
-    score        INTEGER NOT NULL DEFAULT 0,
-    verified     INTEGER NOT NULL DEFAULT 0,
-    premium      INTEGER NOT NULL DEFAULT 0,
-    created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-    updated_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-    FOREIGN KEY (company_id) REFERENCES Companies(id)
-  )
-`);
+export const JobRequest = mongoose.model('JobRequest', jobRequestSchema);
 
-// Create the OfferInterests table (pros express interest in a submitted offer)
-db.exec(`
-  CREATE TABLE IF NOT EXISTS OfferInterests (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    offer_id    INTEGER NOT NULL,
-    company_id  INTEGER NOT NULL,
-    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(offer_id, company_id),
-    FOREIGN KEY (offer_id)    REFERENCES Offers(id),
-    FOREIGN KEY (company_id)  REFERENCES Companies(id)
-  )
-`);
+// ─── JobInterest ───────────────────────────────────────────────────────────
+const jobInterestSchema = new mongoose.Schema({
+  jobRequestId: { type: mongoose.Schema.Types.ObjectId, ref: 'JobRequest', required: true },
+  companyId:    { type: mongoose.Schema.Types.ObjectId, ref: 'Company',    required: true },
+  createdAt:    { type: Date, default: Date.now },
+});
 
-// Create the JobInterests table (pros express interest in a job request)
-db.exec(`
-  CREATE TABLE IF NOT EXISTS JobInterests (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    job_request_id  INTEGER NOT NULL,
-    company_id      INTEGER NOT NULL,
-    created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(job_request_id, company_id),
-    FOREIGN KEY (job_request_id) REFERENCES JobRequests(id),
-    FOREIGN KEY (company_id)     REFERENCES Companies(id)
-  )
-`);
+jobInterestSchema.index({ jobRequestId: 1, companyId: 1 }, { unique: true });
 
-export default db;
+export const JobInterest = mongoose.model('JobInterest', jobInterestSchema);
+
+// ─── OfferInterest ─────────────────────────────────────────────────────────
+const offerInterestSchema = new mongoose.Schema({
+  offerId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Offer',   required: true },
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
+  createdAt: { type: Date, default: Date.now },
+});
+
+offerInterestSchema.index({ offerId: 1, companyId: 1 }, { unique: true });
+
+export const OfferInterest = mongoose.model('OfferInterest', offerInterestSchema);
