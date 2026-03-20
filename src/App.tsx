@@ -18,7 +18,7 @@ const HomeownerWizardPage = lazy(() =>
 );
 
 const App = () => (
-  <BrowserRouter>
+  <BrowserRouter basename={import.meta.env.BASE_URL}>
     <Routes>
       <Route
         path="/"
